@@ -713,6 +713,7 @@ val candidateOneIDs = components
 | **保持不变** | C_new 和某个 H_old 有顶点相同     | 保持 H_old 的 OneID 不变，更新成员列表               |
 | **融合**   | C_new 和多个历史 OneID 都有顶点相同  | 将多个历史 OneID 合并为一个，原 OneID 标记为 `merged`   |
 | **分裂**   | 某个 H_old 的顶点分散到多个 C_new   | 将 H_old 拆分为多个新 OneID，原 OneID 标记为 `split` |
+| **删除点后局部重算** | 阶段 2 删除顶点/边后，对受影响的 H_old 执行局部 WCC，子图分裂为多个连通分量 | 包含原 H_old 主顶点的分量保留原 OneID，其余分量分配新 OneID，原 H_old 标记为 `partial_split` |
 
 
 **分裂场景的触发原因**：
@@ -723,6 +724,67 @@ val candidateOneIDs = components
 - **数据修正**：历史数据的错误被修正后，导致图结构重新计算
 
 无论触发原因如何，阶段 4 的判定逻辑一致：只要 H_old 的顶点分散到多个 C_new，就执行分裂操作。
+
+**删除点后局部重算的详细说明**：
+
+删除点/边触发的分裂与上述一般分裂场景在触发机制和处理流程上有区别，因此单独列出。其核心差异在于：不需要对全图重新执行 WCC，只需要对**受影响的单个历史 OneID** 执行局部 WCC。
+
+```
+删除点后局部重算的判定流程：
+
+1. 识别受影响的历史 OneID
+   - 阶段 2 中检测到删除操作（顶点删除或边删除）后
+   - 通过历史 OneID 库，定位包含被删除顶点/边的历史 OneID H_old
+
+2. 构建受影响子图并执行局部 WCC
+   - 提取 H_old 对应的所有顶点和边，构建子图
+   - 在子图中移除被删除的顶点/边
+   - 对剩余子图执行 WCC，得到 K 个连通分量
+
+3. 判定结果
+   - K = 1（子图仍连通）：
+     → H_old 保持不变，仅更新成员列表（移除被删除的顶点）
+     → 属于"保持不变"场景，不产生 OneID 变更
+   - K > 1（子图断裂为多个分量）：
+     → H_old 发生"删除点后局部重算"
+     → 包含原 H_old 主顶点（component 代表元）的分量保留原 OneID
+     → 其余 K-1 个分量各分配一个新 OneID
+     → 原 H_old 标记为 `partial_split`（区别于一般分裂的 `split`）
+
+4. 与一般分裂的区别
+   - 一般分裂：全图 WCC 后，H_old 的顶点自然分散到多个 C_new，被动发现
+   - 删除点后局部重算：主动定位受影响的 H_old，仅对该子图执行 WCC，性能更优
+   - 标记不同：`partial_split` 表示由删除操作触发的分裂，`split` 表示由图结构自然变化触发的分裂
+   - 变更流水中 `decision_type` 分别为 `node_deletion_split` 和 `split`，便于审计区分
+```
+
+**示例**：
+
+```
+历史 OneID BR:1001:000000042 包含顶点：
+  {phone:138, email:a@x.com, openid:ox_abc, device_id:xyz}
+
+连通关系：phone ↔ email ↔ openid ↔ device_id（链式连通）
+
+场景 A — 删除点导致局部重算：
+  删除 openid:ox_abc 后：
+  剩余顶点：{phone:138, email:a@x.com} 和 {device_id:xyz}
+  剩余边：phone ↔ email（device_id 仅通过 openid 连通，openid 被删后 device_id 孤立）
+
+  局部 WCC 结果：2 个连通分量
+    分量 1: {phone:138, email:a@x.com} → 保留原 OneID BR:1001:000000042
+    分量 2: {device_id:xyz}            → 分配新 OneID BR:1001:000000099
+  H_old 标记为 partial_split
+
+场景 B — 删除点但未断裂：
+  删除 device_id:xyz 后：
+  剩余顶点：{phone:138, email:a@x.com, openid:ox_abc}
+  剩余边：phone ↔ email ↔ openid（仍连通）
+
+  局部 WCC 结果：1 个连通分量
+    → H_old 保持不变，仅从成员列表中移除 device_id:xyz
+    → 属于"保持不变"场景
+```
 
 
 #### 4.3 分配新 OneID / 拆分旧 ID

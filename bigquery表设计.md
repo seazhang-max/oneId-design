@@ -195,14 +195,14 @@ OPTIONS (
 
 ## 四、DWD 层 — OneID 图计算明细（oneid_dwd 数据集）
 
-### 4.1 dwd_oneid_graph_vertex_di（点表）
+### 4.1 dwd_oneid_graph_vertex_df（点表）
 
 清洗后的图计算点表，每个唯一的 ID 标识值作为一个顶点。
 
 > **说明**：该表是 Spark 图计算链路中的 DataFrame 中间结果，作为 GraphFrames/WCC 的输入使用，不作为下游业务查询或服务发布的直接消费表。
 
 ```sql
-CREATE OR REPLACE TABLE `oneid_dwd.dwd_oneid_graph_vertex_di`
+CREATE OR REPLACE TABLE `oneid_dwd.dwd_oneid_graph_vertex_df`
 (
   -- 基础标识
   vertex_id         STRING        NOT NULL,  -- 唯一标识 = id_type + ":" + id_value
@@ -252,14 +252,14 @@ OPTIONS (
 
 > **说明**：张三贡献了 6 个 vertex（phone、email、2 个 openid、unionid、device_id），李四贡献了 4 个 vertex。公共 cookie 被过滤，不生成 vertex。
 
-### 4.2 dwd_oneid_graph_edge_di（边表）
+### 4.2 dwd_oneid_graph_edge_df（边表）
 
 清洗后的图计算边表，同一用户在同一业务事件中共现的 ID 标识之间建立边。
 
 > **说明**：该表是 Spark 图计算链路中的 DataFrame 中间结果，作为 GraphFrames/WCC 的边输入使用，不作为下游业务查询或服务发布的直接消费表。
 
 ```sql
-CREATE OR REPLACE TABLE `oneid_dwd.dwd_oneid_graph_edge_di`
+CREATE OR REPLACE TABLE `oneid_dwd.dwd_oneid_graph_edge_df`
 (
   -- 边的两端
   src                 STRING        NOT NULL,  -- 源顶点 vertex_id

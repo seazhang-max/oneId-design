@@ -304,6 +304,42 @@ Edge {
 | Cookie ID ↔ Cookie ID | 0.4  | 弱关联：同浏览器不同会话         |
 
 
+**增量存储设计**：
+
+为支持增量更新和审计回溯，点表和边表采用**软删除 + 增量文件 + 全量快照**的存储策略：
+
+- **软删除标记**：点表和边表均增加 `status` 字段（`"active"` | `"deleted"`），删除时标记为 `"deleted"` 而非物理删除，保留审计轨迹
+- **每日增量文件**：记录当日新增、删除、修改的点和边，文件名包含日期分区（如 `vertices/dt=2026-06-18/`）
+- **定期全量快照**：每周生成完整的点表和边表快照，作为增量合并的基线
+
+```
+Vertex {
+  vertex_id: String,
+  id_type: Enum,
+  id_value: String,
+  source_system: String,
+  first_seen_at: Timestamp,
+  last_seen_at: Timestamp,
+  observation_count: Long,
+  status: Enum,              // "active" | "deleted"（软删除标记）
+  deleted_at: Timestamp?,    // 删除时间（删除时填写）
+  delete_reason: String?     // 删除原因（如 "user_cancelled"、"dirty_data"、"manual_intervention"）
+}
+
+Edge {
+  src: String,
+  dst: String,
+  weight: Float,
+  co_occurrence_count: Long,
+  first_co_at: Timestamp,
+  last_co_at: Timestamp,
+  source_system: String,
+  status: Enum,              // "active" | "deleted"（软删除标记）
+  deleted_at: Timestamp?,    // 删除时间
+  delete_reason: String?     // 删除原因
+}
+```
+
 #### 1.4 采集原始业务 ID 与标准化标识的绑定关系
 
 原始业务系统（如  电商系统、微信小程序、APP 等）中的用户 UID 并不直接参与 WCC 图计算，但需要在后续阶段中建立 UID → OneID 的映射关系（对应 BigQuery 表 `dws_oneid_identity_original_id_mapping_df`）。因此，在数据采集阶段需要同步提取 UID 与标准化 ID 标识之间的绑定关系。
@@ -347,8 +383,8 @@ OriginalIdBinding {
 
 ### 输出
 
-- 标准化点表（Parquet 格式，分区存储）
-- 标准化边表（Parquet 格式，分区存储）
+- 标准化点表
+- 标准化边表
 - **原始业务 ID 绑定关系表（Parquet 格式，分区存储）**
 
 ### 三层差异
@@ -416,7 +452,82 @@ val cleanGraph = GraphFrame(g.vertices, cleanEdges)
 - 软剪枝（可选）：保留超级节点本身，但降低其关联边的权重至接近 0
 - 被剪枝的超级节点单独记录，供风控模块使用（可能是羊毛党/欺诈信号）
 
-#### 2.3 显式缓存
+#### 2.3 删除点与删除边的增量处理
+
+当点表或边表中存在 `status = "deleted"` 的记录时，需要在构建 GraphFrame 后执行增量处理，确保删除操作正确反映到图结构中：
+
+**删除顶点的处理**：
+
+当某个顶点被标记为 `"deleted"`（如用户注销、脏数据清理），需要级联删除其关联的所有边，并判断是否导致连通分量分裂：
+
+```scala
+// 1. 识别待删除的顶点
+val deletedVertices = vertices.filter($"status" === "deleted")
+
+// 2. 级联删除关联边
+val edgesAfterVertexDeletion = cleanEdges
+  .join(deletedVertices, $"src" === deletedVertices("vertex_id"), "left_anti")
+  .join(deletedVertices, $"dst" === deletedVertices("vertex_id"), "left_anti")
+
+// 3. 从顶点表中移除已删除的顶点
+val verticesAfterDeletion = vertices.filter($"status" =!= "deleted")
+
+// 4. 重建图
+val graphAfterDeletion = GraphFrame(verticesAfterDeletion, edgesAfterVertexDeletion)
+```
+
+**删除边的处理**：
+
+当某条边被标记为 `"deleted"`（如人工干预的 `edge_delete` 操作），需要判断该边是否为**桥边**（Bridge Edge）——即删除后会导致连通分量分裂的边：
+
+```
+桥边判断逻辑：
+  对于待删除的边 E(src, dst)：
+    1. 在移除 E 后的子图中，从 src 出发执行 BFS/DFS
+    2. 检查是否能到达 dst
+    3. 如果可达 → E 不是桥边，删除后连通分量不变
+    4. 如果不可达 → E 是桥边，删除后连通分量分裂为 2 个子分量
+```
+
+**桥边判断示例**：
+
+```
+连通分量：phone:138 ↔ email:a@x.com ↔ openid:ox_abc ↔ device_id:xyz
+
+删除边 email ↔ openid：
+  从 email 出发，不经过 email↔openid 边，能否到达 openid？
+  路径尝试：email → phone → ???（phone 没有其他边到 openid 或 device_id）
+  结论：不可达 → email↔openid 是桥边
+  
+  删除后分裂为：
+    分量 1: {phone:138, email:a@x.com}
+    分量 2: {openid:ox_abc, device_id:xyz}
+
+删除边 phone ↔ email：
+  从 phone 出发，不经过 phone↔email 边，能否到达 email？
+  路径尝试：phone 没有其他边 → 不可达
+  结论：phone↔email 是桥边
+
+  删除后分裂为：
+    分量 1: {phone:138}
+    分量 2: {email:a@x.com, openid:ox_abc, device_id:xyz}
+```
+
+**批量删除边的优化**：
+
+如果一批边需要同时删除（如批量人工干预），不需要逐条判断桥边。将所有待删除边一次性移除后，执行一次局部 WCC 即可，这比逐条判断更高效，且结果一致。
+
+**增量更新 vs 全量重算的选择策略**：
+
+| 场景                           | 策略     | 原因                                  |
+| ---------------------------- | ------ | ----------------------------------- |
+| 删除少量点/边（影响 < 100 个 OneID） | 增量更新   | 局部 WCC 开销远小于全量重算                    |
+| 删除大量点/边（影响 > 10% 的图）       | 全量重算   | 增量更新的累积开销可能超过全量重算                   |
+| 超级节点被剪枝                   | 增量更新   | 超级节点的边在阶段 2 已移除，不影响 WCC 结果         |
+| 脏数据批量清理                   | 全量重算   | 脏数据可能广泛污染图结构，增量更新难以保证正确性           |
+| 人工干预少量边                    | 增量更新   | 影响范围可控，通过 Dry Run 预评估后执行            |
+
+#### 2.4 显式缓存
 
 GraphFrames 的 WCC 算法会多次遍历顶点和边。如果不显式缓存，每次 Action 都会重新从磁盘读取数据，导致大量重复 I/O。
 
@@ -425,7 +536,7 @@ cleanGraph.vertices.cache()
 cleanGraph.edges.cache()
 ```
 
-#### 2.4 设置 Checkpoint 目录
+#### 2.5 设置 Checkpoint 目录
 
 WCC 算法是迭代算法，每轮迭代都会在上轮结果上追加 transform 操作，导致 Spark 的血缘链（Lineage）越来越长，最终触发 StackOverflow。通过设置 Checkpoint 目录，每轮迭代将中间结果持久化到 HDFS，截断血缘链。
 
@@ -504,6 +615,49 @@ val candidateOneIDs = components
 
 接下来在阶段 4 中，这些候选 OneID 会与历史 OneID 库做增量比对，决定是新建、融合还是分裂，最终分配正式的 OneID 编码（如 `BR:1001:000000001`）。
 
+**增量场景下的局部 WCC**：
+
+当阶段 2 中检测到删除点/边操作时，不需要对全图执行 WCC，只需要对**受影响的连通分量**执行局部 WCC：
+
+```
+局部 WCC 的执行流程：
+
+1. 定位受影响的连通分量
+   - 通过历史 OneID 库，找到包含被删除顶点/边的历史 OneID
+   - 提取该 OneID 对应的所有顶点和边，构建子图
+
+2. 在子图上执行 WCC
+   - 如果子图在删除后仍为 1 个连通分量 → 该 OneID 保持不变
+   - 如果子图分裂为 K 个连通分量（K > 1） → 该 OneID 需要分裂为 K 个新 OneID
+
+3. 局部 WCC 的范围界定
+   - 只加载受影响的连通分量（通过历史 OneID 定位）
+   - 不需要加载全图，仅加载该 OneID 对应的顶点和边子集
+   - 在 Spark 中通过 filter + 子图构建实现
+
+4. 并发安全
+   - 多个增量更新可能同时影响不同的连通分量
+   - 不同连通分量的增量更新可以并行执行
+   - 同一连通分量的增量更新需要串行化（通过 OneID 级别的锁或版本号保证）
+```
+
+**示例**：
+
+```
+历史 OneID BR:1001:000000042 包含顶点：
+  {phone:138, email:a@x.com, openid:ox_abc, device_id:xyz}
+
+连通关系：phone ↔ email ↔ openid ↔ device_id（链式连通）
+
+删除 openid:ox_abc 后：
+  剩余顶点：{phone:138, email:a@x.com} 和 {device_id:xyz}
+  剩余边：phone ↔ email（device_id 仅通过 openid 连通，openid 被删后 device_id 孤立）
+
+  局部 WCC 结果：2 个连通分量
+    分量 1: {phone:138, email:a@x.com} → 保留原 OneID BR:1001:000000042
+    分量 2: {device_id:xyz}            → 分配新 OneID BR:1001:000000099
+```
+
 ### 收敛性保证
 
 - WCC 算法在有限图上必然收敛（每轮至少有一个顶点的 Component ID 变小或不变）
@@ -559,6 +713,16 @@ val candidateOneIDs = components
 | **保持不变** | C_new 和某个 H_old 有顶点相同     | 保持 H_old 的 OneID 不变，更新成员列表               |
 | **融合**   | C_new 和多个历史 OneID 都有顶点相同  | 将多个历史 OneID 合并为一个，原 OneID 标记为 `merged`   |
 | **分裂**   | 某个 H_old 的顶点分散到多个 C_new   | 将 H_old 拆分为多个新 OneID，原 OneID 标记为 `split` |
+
+
+**分裂场景的触发原因**：
+
+分裂可能由以下原因触发：
+- **新增边导致图结构变化**：新的 ID 标识将原本连通的顶点分隔到不同分量
+- **删除点/边导致连通性破坏**：阶段 2 中的删除操作（如脏数据清理、用户注销、人工干预）导致原本连通的顶点不再连通
+- **数据修正**：历史数据的错误被修正后，导致图结构重新计算
+
+无论触发原因如何，阶段 4 的判定逻辑一致：只要 H_old 的顶点分散到多个 C_new，就执行分裂操作。
 
 
 #### 4.3 分配新 OneID / 拆分旧 ID

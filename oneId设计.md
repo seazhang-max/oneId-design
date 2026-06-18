@@ -83,7 +83,7 @@ PhysicalInfo {
   registered_channels: List<String>,  // 注册渠道列表
   first_register_at: Timestamp?,      // 首次注册时间
 
-  // ── 会员属性（来自 BTC 交易系统） ──
+  // ── 会员属性 ──
   membership_level: String?,   // 会员等级
   membership_score: Integer,   // 会员积分
 
@@ -306,13 +306,13 @@ Edge {
 
 #### 1.4 采集原始业务 ID 与标准化标识的绑定关系
 
-原始业务系统（如 BTC 交易系统、微信小程序、APP 等）中的用户 UID 并不直接参与 WCC 图计算，但需要在后续阶段中建立 UID → OneID 的映射关系（对应 BigQuery 表 `dws_oneid_identity_original_id_mapping_df`）。因此，在数据采集阶段需要同步提取 UID 与标准化 ID 标识之间的绑定关系。
+原始业务系统（如  电商系统、微信小程序、APP 等）中的用户 UID 并不直接参与 WCC 图计算，但需要在后续阶段中建立 UID → OneID 的映射关系（对应 BigQuery 表 `dws_oneid_identity_original_id_mapping_df`）。因此，在数据采集阶段需要同步提取 UID 与标准化 ID 标识之间的绑定关系。
 
 **绑定关系表（Binding Table）**：记录每个来源系统中的原始 UID 与经过归一化后的 ID 标识之间的关联
 
 ```
 OriginalIdBinding {
-  source_system: String,       // 来源系统: btc_trade | wechat_mini | app_ios | app_android | web_pc
+  source_system: String,       // 来源系统: cyberbiz | wechat_mini | app_ios | app_android | web_pc
   business_domain: String,     // 业务域: ecommerce | content | app | delivery
   source_uid: String,          // 来源系统中的原始用户 UID
   original_id_type: String,    // 原始 ID 类型: ecommerce_uid | app_uid | wechat_uid | external_uid | account_id
@@ -343,7 +343,7 @@ OriginalIdBinding {
 | `event_inference`     | 0.7~0.9 | 通过行为事件（如同一设备上的下单行为）推断的绑定关系    |
 
 
-**说明**：一个原始 UID 可能对应多个标准化 ID 标识（如一个 BTC 交易系统 UID 同时绑定了手机号和邮箱），因此绑定关系表是一个 UID 到多个标准化标识的多对多映射。
+**说明**：一个原始 UID 可能对应多个标准化 ID 标识（如一个 电商系统 UID 同时绑定了手机号和邮箱），因此绑定关系表是一个 UID 到多个标准化标识的多对多映射。
 
 ### 输出
 

@@ -1,4 +1,4 @@
-﻿# OneID 系统 BigQuery 表设计（OneData 方法论）
+# OneID 系统 BigQuery 表设计（OneData 方法论）
 
 ## 一、数据分层架构
 
@@ -67,8 +67,6 @@ CREATE OR REPLACE TABLE `oneid_dwd.dwd_trade_user_user_profile_wide_di`
   source_uid          STRING        NOT NULL,  -- 来源系统的用户 UID
   
   -- 层级与业务范围
-  scope               STRING        NOT NULL,  -- OneID 层级: brand | group | global
-  scope_id            STRING        NOT NULL,  -- 层级范围 ID: 品牌ID / 集团ID / global
   brand_id            STRING,                  -- 品牌 ID
   group_id            STRING,                  -- 集团 ID
   business_domain     STRING,                  -- 业务域: ecommerce | content | app | delivery
@@ -143,8 +141,6 @@ CREATE OR REPLACE TABLE `oneid_dwd.dwd_trade_user_association_event_di`
   event_type          STRING        NOT NULL,  -- login | register | order | browse | payment
   
   -- 层级与范围
-  scope               STRING        NOT NULL,  -- OneID 层级: brand | group | global
-  scope_id            STRING        NOT NULL,  -- 层级范围 ID: 品牌ID / 集团ID / global
   brand_id            STRING,  -- 品牌 ID
   group_id            STRING,  -- 集团 ID
   business_domain     STRING,                  -- 业务域: ecommerce | content | app | delivery
@@ -562,9 +558,11 @@ OPTIONS (
 
 **示例数据**：
 
-| operation_id | target_one_id | source_one_ids | source_one_id_count | merge_reason | merge_reason_code | trigger_type | merge_confidence | shared_id_count | shared_id_types | operation_date |
-| ------------ | ------------- | -------------- | ------------------- | ------------ | ----------------- | ------------ | ---------------- | --------------- | --------------- | -------------- |
-| MERGE001 | BR:1001:000000099 | [BR:1001:000000100] | 1 | WCC 连通分量包含两个历史 OneID 的成员，共享 2 个顶点 | wcc_connected | auto | 0.92 | 2 | [phone,email] | 2026-06-18 |
+
+| operation_id | target_one_id     | source_one_ids      | source_one_id_count | merge_reason                      | merge_reason_code | trigger_type | merge_confidence | shared_id_count | shared_id_types | operation_date |
+| ------------ | ----------------- | ------------------- | ------------------- | --------------------------------- | ----------------- | ------------ | ---------------- | --------------- | --------------- | -------------- |
+| MERGE001     | BR:1001:000000099 | [BR:1001:000000100] | 1                   | WCC 连通分量包含两个历史 OneID 的成员，共享 2 个顶点 | wcc_connected     | auto         | 0.92             | 2               | [phone,email]   | 2026-06-18     |
+
 
 > **说明**：MERGE001 将 BR:1001:000000100 融合到 BR:1001:000000099。融合前状态查 `oneid_master_df` 的上一批次或上一日快照，融合后状态查本次 `dt + batch_id` 对应快照。
 
@@ -613,9 +611,11 @@ OPTIONS (
 
 **示例数据**：
 
-| operation_id | source_one_id | target_one_ids | target_one_id_count | split_reason | split_reason_code | trigger_type | split_basis | operation_date |
-| ------------ | ------------- | -------------- | ------------------- | ------------ | ----------------- | ------------ | ----------- | -------------- |
-| SPLIT001 | BR:1001:000000102 | [BR:1001:000000103, BR:1001:000000104] | 2 | 家庭共用账号被错误合并 | manual_intervention | manual | 人工确认家庭共用账号，需要拆分手机号与设备标识 | 2026-06-18 |
+
+| operation_id | source_one_id     | target_one_ids                         | target_one_id_count | split_reason | split_reason_code   | trigger_type | split_basis             | operation_date |
+| ------------ | ----------------- | -------------------------------------- | ------------------- | ------------ | ------------------- | ------------ | ----------------------- | -------------- |
+| SPLIT001     | BR:1001:000000102 | [BR:1001:000000103, BR:1001:000000104] | 2                   | 家庭共用账号被错误合并  | manual_intervention | manual       | 人工确认家庭共用账号，需要拆分手机号与设备标识 | 2026-06-18     |
+
 
 > **说明**：SPLIT001 将 BR:1001:000000102 分裂为两个新 OneID。分裂前后明细通过 `oneid_master_df` 的相邻 `dt` 分区追溯。
 
@@ -669,9 +669,11 @@ OPTIONS (
 
 **示例数据**：
 
-| conflict_id | conflicting_id_type | conflicting_id_value | candidate_one_ids | candidate_count | resolution_rule | resolution_detail | winner_one_id | loser_one_ids | intervention_applied | operation_date |
-| ----------- | ------------------- | -------------------- | ----------------- | --------------- | --------------- | ----------------- | ------------- | ------------- | -------------------- | -------------- |
-| CONF001 | phone | 13812345678 | [COMP_ZHANG, COMP_TEMP_X] | 2 | high_weight_priority | 手机号 13812345678 同时出现在两个候选分量中，按权重优先规则分配给 COMP_ZHANG | COMP_ZHANG | [COMP_TEMP_X] | false | 2026-06-18 |
+
+| conflict_id | conflicting_id_type | conflicting_id_value | candidate_one_ids         | candidate_count | resolution_rule      | resolution_detail                                  | winner_one_id | loser_one_ids | intervention_applied | operation_date |
+| ----------- | ------------------- | -------------------- | ------------------------- | --------------- | -------------------- | -------------------------------------------------- | ------------- | ------------- | -------------------- | -------------- |
+| CONF001     | phone               | 13812345678          | [COMP_ZHANG, COMP_TEMP_X] | 2               | high_weight_priority | 手机号 13812345678 同时出现在两个候选分量中，按权重优先规则分配给 COMP_ZHANG | COMP_ZHANG    | [COMP_TEMP_X] | false                | 2026-06-18     |
+
 
 > **说明**：手机号 13812345678 同时出现在 COMP_ZHANG 和一个临时分量 COMP_TEMP_X 中，最终按权重优先规则归属 COMP_ZHANG。
 
@@ -866,6 +868,8 @@ OPTIONS (
 
 面向下游业务系统的权威映射表，用于按层级、业务域和来源系统查询 OneID 与原始业务 ID 的关系。该表弥补 `oneid_master.id_mappings` 只保存标准化身份标识、无法直接还原业务系统 UID 的问题。
 
+> **定位说明**：该表是“当前/分区快照型”映射表，适合回答“某个 UID 当前归属哪个 OneID”。如果要展示某个 UID 的 OneID 变化过程，例如 `U001` 从 `BR:1001:000000100` 被融合到 `BR:1001:000000099`，应查询 5.9 的原始业务 ID 归属变更流水表，而不是只依赖本表。
+
 ```sql
 CREATE OR REPLACE TABLE `oneid_dws.dws_oneid_identity_original_id_mapping_df`
 (
@@ -925,6 +929,99 @@ OPTIONS (
 | BR:1001:000000099 | brand | 1001     | app             | app_ios       | APP001     | app_uid          | APP001            | device_id          | device_zhang_001    | 0.85       | event_co_occurrence | false      |
 | BR:1001:000000099 | brand | 1001     | app             | wechat_mini   | WX001      | wechat_uid       | WX001             | unionid            | unionid_zhang001    | 0.95       | direct_binding      | false      |
 
+
+### 5.9 dws_oneid_identity_original_id_change_di（原始业务ID-OneID归属变更流水表）
+
+记录原始业务 ID 在 OneID 体系中的归属变化过程，用于回答“某个 UID 的 OneID 是如何变化的”。该表按变更事件增量写入，不存储每日未变化的快照；当前归属仍以 5.8 的映射表为准。
+
+典型场景：
+
+- **融合**：某个 UID 原归属 `source_one_id`，因 OneID 合并后归属到 `target_one_id`。
+- **分裂**：某个 UID 从原 OneID 中被剥离，归属到新的 OneID。
+- **解绑/重绑**：人工干预或规则调整导致 UID 与 OneID 的关系移除或重新绑定。
+- **回滚**：单用户或任务级回滚导致 UID 归属恢复到历史 OneID。
+
+```sql
+CREATE OR REPLACE TABLE `oneid_dws.dws_oneid_identity_original_id_change_di`
+(
+  -- 变更标识
+  change_id           STRING        NOT NULL,  -- 变更事件唯一标识
+  change_type         STRING        NOT NULL,  -- bind | reassign | merge_retarget | split_reassign | unbind | rollback | manual_adjust
+
+  -- OneID 层级
+  scope               STRING        NOT NULL,  -- OneID 层级: brand | group | global
+  scope_id            STRING        NOT NULL,  -- 层级范围 ID: 品牌ID / 集团ID / global
+
+  -- 业务隔离维度
+  business_domain     STRING        NOT NULL,  -- ecommerce | content | app | delivery
+  source_system       STRING        NOT NULL,  -- btc_trade | wechat_mini | app_ios | app_android | web_pc
+
+  -- 原始业务 ID
+  source_uid          STRING        NOT NULL,  -- 来源系统中的用户 UID
+  original_id_type    STRING        NOT NULL,  -- ecommerce_uid | app_uid | wechat_uid | external_uid | account_id
+  original_id_value   STRING        NOT NULL,  -- 原始业务 ID 值，保持源系统口径
+
+  -- OneID 归属变化
+  from_one_id         STRING,                  -- 变更前 OneID；首次绑定时为空
+  to_one_id           STRING,                  -- 变更后 OneID；解绑时为空
+  from_status         STRING,                  -- 变更前映射状态: active | deprecated | suspicious | removed
+  to_status           STRING,                  -- 变更后映射状态: active | deprecated | suspicious | removed
+
+  -- 变更原因与证据
+  change_reason       STRING        NOT NULL,  -- 变更原因摘要
+  decision_type       STRING,                  -- create | keep | merge | split | conflict_resolve | intervention | rollback
+  mapping_basis       STRING,                  -- direct_binding | event_co_occurrence | cross_layer_guidance | manual_intervention
+  confidence_before   FLOAT64,                 -- 变更前置信度
+  confidence_after    FLOAT64,                 -- 变更后置信度
+  evidence_vertex_ids ARRAY<STRING>,           -- 触发变更的标准化顶点列表
+
+  -- 溯源
+  decision_id         STRING,                  -- 关联 dws_oneid_identity_mapping_decision_di
+  operation_id        STRING,                  -- 关联 merge/split/intervention/rollback 操作
+  source_event_ids    ARRAY<STRING>,           -- 溯源事件 ID 列表
+  batch_id            STRING        NOT NULL,  -- 计算或接入批次号
+
+  -- 时间
+  changed_at          TIMESTAMP     NOT NULL,  -- 变更发生时间
+  created_at          TIMESTAMP     NOT NULL,  -- 记录创建时间
+
+  -- 分区字段
+  dt                  DATE          NOT NULL  -- 数据分区日期
+)
+PARTITION BY dt
+CLUSTER BY scope, scope_id, source_system, source_uid
+OPTIONS (
+  description = 'DWS层：原始业务 ID 的 OneID 归属变更流水表，用于展示 UID 的 OneID 变化过程'
+);
+```
+
+**示例数据**：
+
+| change_id | change_type    | scope | scope_id | source_system | source_uid | original_id_type | original_id_value | from_one_id       | to_one_id         | decision_type | change_reason                                      | batch_id     | dt         |
+| --------- | -------------- | ----- | -------- | ------------- | ---------- | ---------------- | ----------------- | ----------------- | ----------------- | ------------- | -------------------------------------------------- | ------------ | ---------- |
+| CHG001    | bind           | brand | 1001     | btc_trade     | U001       | ecommerce_uid    | U001              | NULL              | BR:1001:000000100 | create        | 首次进入 OneID 体系，分配新 OneID                  | 202606170001 | 2026-06-17 |
+| CHG002    | merge_retarget | brand | 1001     | btc_trade     | U001       | ecommerce_uid    | U001              | BR:1001:000000100 | BR:1001:000000099 | merge         | WCC 连通分量命中多个历史 OneID，保留 000000099     | 202606180001 | 2026-06-18 |
+| CHG003    | split_reassign | brand | 1001     | btc_trade     | U001       | ecommerce_uid    | U001              | BR:1001:000000099 | BR:1001:000000121 | split         | 人工确认家庭共用账号，UID 从原 OneID 中剥离        | 202606190001 | 2026-06-19 |
+
+**常用查询**：
+
+```sql
+-- 查看某个来源 UID 的 OneID 变化过程
+SELECT
+  changed_at,
+  change_type,
+  from_one_id,
+  to_one_id,
+  decision_type,
+  change_reason,
+  batch_id
+FROM `oneid_dws.dws_oneid_identity_original_id_change_di`
+WHERE scope = 'brand'
+  AND scope_id = '1001'
+  AND source_system = 'btc_trade'
+  AND source_uid = 'U001'
+ORDER BY changed_at;
+```
 
 ---
 
@@ -1011,270 +1108,8 @@ OPTIONS (
 | dry_run_result     | {summary:{total_affected_one_ids:1, updated_one_ids:1, cross_layer_impact:true}, risk_assessment:{risk_level:"low", risk_factors:[{factor:"影响范围小", severity:"info"}]}} |
 
 
-### 6.2 ads_oneid_gov_intervention_rule_df（干预规则表）
-
-干预操作生效后生成的持久化规则。
-
-```sql
-CREATE OR REPLACE TABLE `oneid_ads.ads_oneid_gov_intervention_rule_df`
-(
-  -- 规则标识
-  rule_id             STRING        NOT NULL,  -- 规则唯一标识
-  rule_type           STRING        NOT NULL,  -- 类型字段
-  scope               STRING        NOT NULL,  -- OneID 层级: brand | group | global
-  scope_id            STRING        NOT NULL,  -- 层级范围 ID: 品牌ID / 集团ID / global
-
-  -- 规则内容
-  target_id_values    ARRAY<STRING>,  -- 规则目标 ID 值列表
-  constraint          STRING        NOT NULL,  -- 规则约束类型
-  constraint_params   JSON,  -- 规则约束参数 JSON
-
-  -- 来源追溯
-  source_operation_id STRING        NOT NULL,  -- 来源操作 ID
-  created_by          STRING        NOT NULL,  -- 创建人
-
-  -- 有效期
-  effective_mode      STRING        NOT NULL,  -- 生效模式
-  effective_from      TIMESTAMP     NOT NULL,  -- 生效开始时间
-  effective_until     TIMESTAMP,  -- 生效结束时间
-  is_active           BOOL          NOT NULL,  -- 是否有效
-  
-  -- 分区字段
-  dt                  DATE          NOT NULL  -- 数据分区日期
-)
-CLUSTER BY scope, scope_id, constraint, is_active
-OPTIONS (
-  description = 'ADS层：干预规则表，干预操作生效后生成的持久化规则'
-);
-```
-
-**示例数据**：
 
 
-| rule_id  | rule_type    | scope | scope_id | target_id_values                          | constraint   | constraint_params        | is_active | source_operation_id |
-| -------- | ------------ | ----- | -------- | ----------------------------------------- | ------------ | ------------------------ | --------- | ------------------- |
-| RULE_001 | edge_removed | brand | 1001     | [phone:13812345678, openid:openid_abc123] | edge_removed | {reason:"family_device"} | true      | INTV_20260619_001   |
-
-
-> **说明**：干预操作生效后生成持久化规则 RULE_001，在下次离线批处理时，会移除 phone:13812345678 和 openid:openid_abc123 之间的边，防止再次被 WCC 连通。
-
-### 6.3 ads_oneid_gov_approval_policy_df（审批策略配置表）
-
-```sql
-CREATE OR REPLACE TABLE `oneid_ads.ads_oneid_gov_approval_policy_df`
-(
-  -- 策略标识
-  policy_id           STRING        NOT NULL,  -- 审批策略唯一标识
-  scope               STRING        NOT NULL,  -- OneID 层级: brand | group | global
-  scope_id            STRING        NOT NULL,  -- 层级范围 ID: 品牌ID / 集团ID / global
-
-  -- 审批人配置
-  reviewer_roles      ARRAY<STRING>,  -- 审核角色列表
-  reviewer_count      INT64         NOT NULL,  -- 数量统计字段
-  auto_approve_enabled BOOL        NOT NULL,  -- 是否启用自动审批
-  auto_approve_threshold FLOAT64,  -- 阈值字段
-
-  -- 超时策略
-  review_timeout_hours INT64        NOT NULL,  -- 审核超时时长
-  timeout_action      STRING        NOT NULL,  -- 审核超时动作
-
-  -- 审批规则明细
-  rules               ARRAY<STRUCT<  -- 审批规则明细
-    operation_type    STRING,  -- 操作类型
-    risk_level        STRING,  -- 风险等级
-    require_approval  BOOL,  -- 是否需要审批
-    require_dry_run   BOOL,  -- 是否要求 Dry Run
-    max_batch_size    INT64,  -- 最大批量操作数量
-    cooldown_hours    INT64,  -- 操作冷却时长
-    require_reason    BOOL  -- 是否必须填写原因
-  >>,
-
-  -- 生命周期
-  created_at          TIMESTAMP     NOT NULL,  -- 时间戳字段
-  updated_at          TIMESTAMP     NOT NULL,  -- 时间戳字段
-  is_active           BOOL          NOT NULL,  -- 是否有效
-  
-  -- 分区字段
-  dt                  DATE          NOT NULL  -- 数据分区日期
-)
-CLUSTER BY scope, scope_id
-OPTIONS (
-  description = 'ADS层：审批策略配置表'
-);
-```
-
-### 6.4 ads_oneid_gov_cleaning_rules_df（清洗规则配置表）
-
-```sql
-CREATE OR REPLACE TABLE `oneid_ads.ads_oneid_gov_cleaning_rules_df`
-(
-  -- 规则标识
-  rule_id             STRING        NOT NULL,  -- 规则唯一标识
-  rule_name           STRING        NOT NULL,  -- 规则名称
-  rule_type           STRING        NOT NULL,  -- normalization | filter | priority
-  
-  -- 规则配置
-  rule_config         JSON          NOT NULL,  -- 规则配置 JSON
-  
-  -- 适用范围
-  scope               STRING,  -- OneID 层级: brand | group | global
-  scope_id            STRING,  -- 层级范围 ID: 品牌ID / 集团ID / global
-  
-  -- 状态
-  is_active           BOOL          NOT NULL,  -- 是否有效
-  priority            INT64         NOT NULL,  -- 优先级
-  
-  -- 生命周期
-  created_at          TIMESTAMP     NOT NULL,  -- 时间戳字段
-  updated_at          TIMESTAMP     NOT NULL,  -- 时间戳字段
-  created_by          STRING        NOT NULL,  -- 创建人
-  
-  -- 分区字段
-  dt                  DATE          NOT NULL  -- 数据分区日期
-)
-CLUSTER BY rule_type, is_active
-OPTIONS (
-  description = 'ADS层：清洗规则配置表'
-);
-```
-
-### 6.5 ads_oneid_gov_data_source_config_df（数据源配置表）
-
-```sql
-CREATE OR REPLACE TABLE `oneid_ads.ads_oneid_gov_data_source_config_df`
-(
-  -- 配置标识
-  config_id           STRING        NOT NULL,  -- 配置唯一标识
-  source_system       STRING        NOT NULL,  -- 来源系统标识
-  
-  -- 接入配置
-  source_type         STRING        NOT NULL,  -- 类型字段
-  source_location     STRING        NOT NULL,  -- 数据源位置
-  source_format       STRING,  -- 数据源格式
-  
-  -- 字段映射
-  field_mapping       JSON,  -- 字段映射配置 JSON
-  
-  -- 层级分配规则
-  scope_assignment    JSON,  -- 层级分配规则 JSON
-  
-  -- 调度配置
-  schedule_cron       STRING,  -- 调度 Cron 表达式
-  incremental_mode    BOOL,  -- 是否增量接入
-  incremental_key     STRING,  -- 增量字段名
-  
-  -- 状态
-  is_active           BOOL          NOT NULL,  -- 是否有效
-  
-  -- 生命周期
-  created_at          TIMESTAMP     NOT NULL,  -- 时间戳字段
-  updated_at          TIMESTAMP     NOT NULL,  -- 时间戳字段
-  created_by          STRING        NOT NULL,  -- 创建人
-  
-  -- 分区字段
-  dt                  DATE          NOT NULL  -- 数据分区日期
-)
-CLUSTER BY source_system, is_active
-OPTIONS (
-  description = 'ADS层：数据源配置表'
-);
-```
-
-### 6.6 ads_oneid_gov_id_list_df（ID黑白名单表）
-
-用于在清洗和图构建阶段对特定 ID 执行强制隔离、保留或观察。黑名单用于禁止生成边表数据，白名单用于防止关键业务 ID 被误清洗。
-
-```sql
-CREATE OR REPLACE TABLE `oneid_ads.ads_oneid_gov_id_list_df`
-(
-  -- 名单标识
-  list_id             STRING        NOT NULL,  -- 名单记录唯一标识
-  list_type           STRING        NOT NULL,  -- blacklist | whitelist | greylist
-
-  -- 目标 ID
-  id_type             STRING        NOT NULL,  -- ID 类型
-  id_value            STRING        NOT NULL,  -- ID 值
-  id_value_hash       STRING,                  -- 可选：脱敏查询用 hash
-
-  -- 作用范围
-  scope               STRING,                  -- OneID 层级: brand | group | global
-  scope_id            STRING,  -- 层级范围 ID: 品牌ID / 集团ID / global
-  business_domain     STRING,  -- 业务域
-  source_system       STRING,  -- 来源系统标识
-
-  -- 处理策略
-  action              STRING        NOT NULL,  -- block_vertex | block_edge | force_keep | mark_suspicious | alert_only
-  reason_code         STRING        NOT NULL,  -- test_data | bot | public_wifi | shared_device | vip_customer | manual_review
-  reason_detail       STRING,  -- 原因详情
-  priority            INT64         NOT NULL,  -- 优先级
-
-  -- 生命周期
-  effective_from      TIMESTAMP     NOT NULL,  -- 生效开始时间
-  effective_until     TIMESTAMP,  -- 生效结束时间
-  is_active           BOOL          NOT NULL,  -- 是否有效
-  created_at          TIMESTAMP     NOT NULL,  -- 时间戳字段
-  updated_at          TIMESTAMP     NOT NULL,  -- 时间戳字段
-  created_by          STRING        NOT NULL,  -- 创建人
-
-  -- 分区字段
-  dt                  DATE          NOT NULL  -- 数据分区日期
-)
-PARTITION BY dt
-CLUSTER BY list_type, id_type, is_active
-OPTIONS (
-  description = 'ADS层：ID黑白名单表，控制清洗与图构建阶段的强制隔离、保留和观察策略'
-);
-```
-
-### 6.7 ads_oneid_gov_id_type_weight_config_df（ID类型权重与生命周期配置表）
-
-用于统一管理 ID 类型优先级、默认置信度、边有效期和衰减策略，供清洗、边生成、超级节点处理和冲突消解决策使用。
-
-```sql
-CREATE OR REPLACE TABLE `oneid_ads.ads_oneid_gov_id_type_weight_config_df`
-(
-  -- 配置标识
-  config_id           STRING        NOT NULL,  -- 配置唯一标识
-  id_type             STRING        NOT NULL,  -- ID 类型
-
-  -- 可信等级
-  priority_level      INT64         NOT NULL,  -- 数值越小优先级越高
-  default_weight      FLOAT64       NOT NULL,  -- 权重字段
-  default_confidence  FLOAT64       NOT NULL,  -- 默认置信度
-  can_be_primary      BOOL          NOT NULL,  -- 是否可作为主 ID
-  participate_in_wcc  BOOL          NOT NULL,  -- 是否参与 WCC 图计算
-
-  -- 生命周期与衰减
-  ttl_hours           INT64,                   -- null 表示不过期
-  decay_strategy      STRING        NOT NULL,  -- none | linear | exponential | step
-  decay_params        JSON,  -- 衰减参数 JSON
-  min_effective_weight FLOAT64,  -- 权重字段
-
-  -- 超级节点与风险阈值
-  super_node_degree_threshold INT64,  -- 超级节点度数阈值
-  super_node_action   STRING,                  -- alert_only | down_weight | remove_edges | pause_component
-
-  -- 作用范围
-  scope               STRING,  -- OneID 层级: brand | group | global
-  scope_id            STRING,  -- 层级范围 ID: 品牌ID / 集团ID / global
-  business_domain     STRING,  -- 业务域
-  source_system       STRING,  -- 来源系统标识
-
-  -- 状态
-  is_active           BOOL          NOT NULL,  -- 是否有效
-  created_at          TIMESTAMP     NOT NULL,  -- 时间戳字段
-  updated_at          TIMESTAMP     NOT NULL,  -- 时间戳字段
-  created_by          STRING        NOT NULL,  -- 创建人
-
-  -- 分区字段
-  dt                  DATE          NOT NULL  -- 数据分区日期
-)
-PARTITION BY dt
-CLUSTER BY id_type, is_active, priority_level
-OPTIONS (
-  description = 'ADS层：ID类型权重与生命周期配置表，定义ID优先级、置信度、TTL、衰减和超级节点处理策略'
-);
-```
 
 ### 6.8 ads_oneid_gov_cross_layer_guidance_config_df（跨层合并指导配置表）
 
@@ -1328,53 +1163,6 @@ OPTIONS (
 );
 ```
 
-### 6.9 ads_oneid_service_domain_view_config_df（业务域隔离视图配置表）
-
-定义不同业务域可见、可导出的 OneID 数据范围，支撑电商域、内容域、APP 域等隔离服务，避免跨业务域误用 ID。
-
-```sql
-CREATE OR REPLACE TABLE `oneid_ads.ads_oneid_service_domain_view_config_df`
-(
-  -- 配置标识
-  config_id           STRING        NOT NULL,  -- 配置唯一标识
-  business_domain     STRING        NOT NULL,  -- ecommerce | content | app | delivery
-  view_name           STRING        NOT NULL,  -- 服务视图名称
-
-  -- 可见范围
-  allowed_scopes      ARRAY<STRING> NOT NULL,  -- brand | group | global
-  allowed_scope_ids   ARRAY<STRING>,  -- 允许访问的层级范围 ID 列表
-  allowed_source_systems ARRAY<STRING>,  -- 允许访问的来源系统列表
-  allowed_original_id_types ARRAY<STRING>,  -- 允许访问的原始 ID 类型列表
-  allowed_id_types    ARRAY<STRING>,  -- 允许的 ID 类型列表
-
-  -- 输出字段控制
-  expose_profile_fields ARRAY<STRING>,  -- 允许暴露的画像字段列表
-  expose_ai_profile     BOOL          NOT NULL,  -- 是否暴露 AI 画像
-  expose_cross_layer_mapping BOOL     NOT NULL,  -- 是否暴露跨层映射
-  mask_policy         JSON,                    -- 脱敏策略，如 phone/email 展示规则
-
-  -- 服务策略
-  export_enabled      BOOL          NOT NULL,  -- 是否允许导出
-  api_query_enabled   BOOL          NOT NULL,  -- 是否允许 API 查询
-  max_export_rows     INT64,  -- 最大导出行数
-  cache_ttl_seconds   INT64,  -- 缓存 TTL 秒数
-
-  -- 状态与审计
-  is_active           BOOL          NOT NULL,  -- 是否有效
-  created_at          TIMESTAMP     NOT NULL,  -- 时间戳字段
-  updated_at          TIMESTAMP     NOT NULL,  -- 时间戳字段
-  created_by          STRING        NOT NULL,  -- 创建人
-  approved_by         ARRAY<STRING>,  -- 审批人列表
-
-  -- 分区字段
-  dt                  DATE          NOT NULL  -- 数据分区日期
-)
-PARTITION BY dt
-CLUSTER BY business_domain, is_active
-OPTIONS (
-  description = 'ADS层：业务域隔离视图配置表，控制不同业务域可见和可导出的OneID服务范围'
-);
-```
 
 ### 6.10 ads_oneid_gov_audit_log_di（审计日志表）
 
@@ -1460,43 +1248,7 @@ OPTIONS (
 );
 ```
 
-### 6.12 ads_oneid_gov_backfill_task_di（数据回填任务表）
 
-```sql
-CREATE OR REPLACE TABLE `oneid_ads.ads_oneid_gov_backfill_task_di`
-(
-  -- 任务标识
-  task_id             STRING        NOT NULL,  -- 回填任务唯一标识
-  source_operation_id STRING        NOT NULL,  -- 来源操作 ID
-
-  -- 回填范围
-  affected_one_ids    ARRAY<STRING>,  -- 受影响 OneID 列表
-  affected_date_start DATE,  -- 受影响开始日期
-  affected_date_end   DATE,  -- 受影响结束日期
-  target_systems      ARRAY<STRING>,  -- 回填目标系统列表
-
-  -- 回填模式
-  mode                STRING        NOT NULL,  -- 执行模式
-
-  -- 执行状态
-  status              STRING        NOT NULL,  -- 记录状态
-  progress            FLOAT64,  -- 执行进度
-  error_message       STRING,  -- 错误信息
-
-  -- 生命周期
-  created_at          TIMESTAMP     NOT NULL,  -- 时间戳字段
-  started_at          TIMESTAMP,  -- 时间戳字段
-  completed_at        TIMESTAMP,  -- 时间戳字段
-  
-  -- 分区字段
-  dt                  DATE          NOT NULL  -- 数据分区日期
-)
-PARTITION BY dt
-CLUSTER BY status, mode
-OPTIONS (
-  description = 'ADS层：数据回填任务表'
-);
-```
 
 ---
 
@@ -1561,6 +1313,9 @@ OPTIONS (
 │  dws_oneid_identity_original_id_mapping_df                           │
 │  (OneID-原始业务ID映射，供下游业务域查询)                              │
 │                                                                     │
+│  dws_oneid_identity_original_id_change_di                            │
+│  (原始业务ID归属变更流水，展示 UID 的 OneID 变化过程)                    │
+│                                                                     │
 └────────────────────────────────┼────────────────────────────────────┘
                                  │
                                  ▼
@@ -1586,39 +1341,6 @@ OPTIONS (
 
 ---
 
-## 八、分区与聚类策略总结
-
-
-| 表                                              | 层级  | 分区键  | 聚类键                                               | 过期策略  | 说明                |
-| ---------------------------------------------- | --- | ---- | ------------------------------------------------- | ----- | ----------------- |
-| `dwd_trade_user_user_profile_wide_di`          | DWD | `dt` | `source_system, scope, scope_id`                  | 180 天 | 上游已整理用户明细         |
-| `dwd_trade_user_association_event_di`          | DWD | `dt` | `source_system, event_type, scope`                | 180 天 | 上游已整理关联事件         |
-| `dwd_oneid_graph_vertex_df`                    | DWD | `dt` | `scope, scope_id, id_type`                        | 90 天  | Spark DataFrame 点表中间结果 |
-| `dwd_oneid_graph_edge_df`                      | DWD | `dt` | `scope, scope_id`                                 | 90 天  | Spark DataFrame 边表中间结果 |
-| `dwd_oneid_graph_cleaning_log_di`              | DWD | `dt` | `scope, action_type, filter_reason`               | 90 天  | 清洗日志              |
-| `dws_oneid_identity_wcc_result_df`             | DWS | `dt` | `scope, scope_id, component_id`                   | 90 天  | WCC归属结果（vertex粒度） |
-| `dws_oneid_identity_mapping_decision_di`       | DWS | `dt` | `scope, scope_id, decision_type`                  | 90 天  | ID映射决策过程          |
-| `dws_oneid_identity_merge_operation_di`        | DWS | `dt` | `scope, scope_id, trigger_type`                   | 90 天  | 融合操作明细            |
-| `dws_oneid_identity_split_operation_di`        | DWS | `dt` | `scope, scope_id, trigger_type`                   | 90 天  | 分裂操作明细            |
-| `dws_oneid_identity_conflict_resolution_di`    | DWS | `dt` | `scope, scope_id, resolution_rule`                | 90 天  | 冲突消解明细            |
-| `dws_oneid_identity_oneid_master_df`           | DWS | `dt` | `scope, scope_id, status`                         | 永不过期  | 核心数据              |
-| `dws_oneid_identity_cross_layer_mapping_df`    | DWS | `dt` | `mapping_type, brand_one_id`                      | 永不过期  | 跨层关系              |
-| `dws_oneid_identity_original_id_mapping_df`    | DWS | `dt` | `scope, scope_id, business_domain, source_system` | 永不过期  | OneID-原始业务ID映射    |
-| `ads_oneid_gov_intervention_operation_di`      | ADS | `dt` | `scope, operation_type, status`                   | 永不过期  | 操作记录              |
-| `ads_oneid_gov_intervention_rule_df`           | ADS | `dt` | `scope, scope_id, constraint, is_active`          | 永不过期  | 规则表               |
-| `ads_oneid_gov_approval_policy_df`             | ADS | `dt` | `scope, scope_id`                                 | 永不过期  | 配置表               |
-| `ads_oneid_gov_cleaning_rules_df`              | ADS | `dt` | `rule_type, is_active`                            | 永不过期  | 规则配置              |
-| `ads_oneid_gov_data_source_config_df`          | ADS | `dt` | `source_system, is_active`                        | 永不过期  | 数据源配置             |
-| `ads_oneid_gov_id_list_df`                     | ADS | `dt` | `list_type, id_type, is_active`                   | 永不过期  | ID黑白名单            |
-| `ads_oneid_gov_id_type_weight_config_df`       | ADS | `dt` | `id_type, is_active, priority_level`              | 永不过期  | ID权重与TTL配置        |
-| `ads_oneid_gov_cross_layer_guidance_config_df` | ADS | `dt` | `scope, scope_id, enabled`                        | 永不过期  | 跨层合并指导配置          |
-| `ads_oneid_service_domain_view_config_df`      | ADS | `dt` | `business_domain, is_active`                      | 永不过期  | 业务域隔离视图配置         |
-| `ads_oneid_gov_audit_log_di`                   | ADS | `dt` | `scope, operation_type, operator_type`            | 365 天 | 审计日志              |
-| `ads_oneid_gov_rollback_operation_di`          | ADS | `dt` | `rollback_type, status`                           | 永不过期  | 回滚记录              |
-| `ads_oneid_gov_backfill_task_di`               | ADS | `dt` | `status, mode`                                    | 永不过期  | 回填任务              |
-
-
----
 
 ## 九、OneData 建模要点
 

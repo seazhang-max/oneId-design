@@ -50,7 +50,7 @@
 
 ---
 
-## 三、dwd 层 — 操作数据层（oneid_ods 数据集）
+## 三、dwd 层 — 操作数据层（oneid_dwd 数据集）
 
 ### 3.1 dwd_trade_user_user_profile_wide_di（用户信息宽表）
 
@@ -136,8 +136,6 @@ CREATE OR REPLACE TABLE `dwd_trade_user_association_event_di`
   event_type          STRING        NOT NULL,  -- login | register | order | browse | payment
   
   -- 层级与范围
-  scope               STRING        NOT NULL,
-  scope_id            STRING        NOT NULL,
   brand_id            STRING,
   group_id            STRING,
   
@@ -257,10 +255,8 @@ CREATE OR REPLACE TABLE `oneid_dwd.dwd_oneid_graph_edge_df`
   src                 STRING        NOT NULL,  -- 源顶点 vertex_id
   dst                 STRING        NOT NULL,  -- 目标顶点 vertex_id
 
-  -- 权重与共现
-  weight              FLOAT64       NOT NULL,  -- 边权重（基础权重 × 时间衰减）
-  base_weight         FLOAT64       NOT NULL,
-  time_decay_factor   FLOAT64       NOT NULL,
+  -- 置信度与共现
+  confidence          FLOAT64       NOT NULL,  -- 边置信度（两个 ID 标识属于同一自然人的可信程度）
   co_occurrence_count INT64         NOT NULL,
   first_co_at         TIMESTAMP     NOT NULL,
   last_co_at          TIMESTAMP     NOT NULL,
@@ -289,17 +285,17 @@ OPTIONS (
 **示例数据**：
 
 
-| src                      | dst                                                       | weight | base_weight | time_decay_factor | co_occurrence_count | source_system |
-| ------------------------ | --------------------------------------------------------- | ------ | ----------- | ----------------- | ------------------- | ------------- |
-| phone:13812345678        | email:[zhangsan@example.com](mailto:zhangsan@example.com) | 0.90   | 0.90        | 1.00              | 1                   | btc_trade     |
-| phone:13812345678        | openid:openid_abc123                                      | 0.80   | 0.80        | 1.00              | 1                   | app_ios       |
-| phone:13812345678        | device:device_zhang_001                                   | 0.80   | 0.80        | 1.00              | 1                   | app_ios       |
-| phone:13812345678        | openid:openid_def456                                      | 0.85   | 0.85        | 1.00              | 1                   | wechat_mini   |
-| phone:13812345678        | unionid:unionid_zhang001                                  | 0.85   | 0.85        | 1.00              | 1                   | wechat_mini   |
-| unionid:unionid_zhang001 | openid:openid_def456                                      | 0.95   | 0.95        | 1.00              | 1                   | wechat_mini   |
-| phone:13987654321        | email:[lisi@example.com](mailto:lisi@example.com)         | 0.90   | 0.90        | 1.00              | 1                   | btc_trade     |
-| phone:13987654321        | openid:openid_ghi012                                      | 0.80   | 0.80        | 1.00              | 1                   | app_ios       |
-| phone:13987654321        | device:device_lisi_001                                    | 0.80   | 0.80        | 1.00              | 1                   | app_ios       |
+| src                      | dst                                                       | confidence | co_occurrence_count | source_system |
+| ------------------------ | --------------------------------------------------------- | ---------- | ------------------- | ------------- |
+| phone:13812345678        | email:[zhangsan@example.com](mailto:zhangsan@example.com) | 0.90       | 1                   | btc_trade     |
+| phone:13812345678        | openid:openid_abc123                                      | 0.80       | 1                   | app_ios       |
+| phone:13812345678        | device:device_zhang_001                                   | 0.80       | 1                   | app_ios       |
+| phone:13812345678        | openid:openid_def456                                      | 0.85       | 1                   | wechat_mini   |
+| phone:13812345678        | unionid:unionid_zhang001                                  | 0.85       | 1                   | wechat_mini   |
+| unionid:unionid_zhang001 | openid:openid_def456                                      | 0.95       | 1                   | wechat_mini   |
+| phone:13987654321        | email:[lisi@example.com](mailto:lisi@example.com)         | 0.90       | 1                   | btc_trade     |
+| phone:13987654321        | openid:openid_ghi012                                      | 0.80       | 1                   | app_ios       |
+| phone:13987654321        | device:device_lisi_001                                    | 0.80       | 1                   | app_ios       |
 
 
 > **说明**：张三的 6 个 vertex 之间形成了 6 条边（高权重连通），李四的 4 个 vertex 之间形成了 3 条边。由于公共 cookie 被过滤，张三和李四之间**没有边**。

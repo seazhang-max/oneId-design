@@ -335,11 +335,13 @@ OriginalIdBinding {
 
 **绑定关系来源**：
 
-| 绑定来源 | 置信度 | 说明 |
-| --- | --- | --- |
-| `direct_registration` | 1.0 | 用户在注册时直接填写的手机号/邮箱，UID 与标识直接绑定 |
-| `login_binding` | 0.95 | 用户登录时通过验证码/授权确认的绑定关系 |
-| `event_inference` | 0.7~0.9 | 通过行为事件（如同一设备上的下单行为）推断的绑定关系 |
+
+| 绑定来源                  | 置信度     | 说明                            |
+| --------------------- | ------- | ----------------------------- |
+| `direct_registration` | 1.0     | 用户在注册时直接填写的手机号/邮箱，UID 与标识直接绑定 |
+| `login_binding`       | 0.95    | 用户登录时通过验证码/授权确认的绑定关系          |
+| `event_inference`     | 0.7~0.9 | 通过行为事件（如同一设备上的下单行为）推断的绑定关系    |
+
 
 **说明**：一个原始 UID 可能对应多个标准化 ID 标识（如一个 BTC 交易系统 UID 同时绑定了手机号和邮箱），因此绑定关系表是一个 UID 到多个标准化标识的多对多映射。
 
@@ -626,16 +628,18 @@ val candidateOneIDs = components
 
 **变更事件触发规则**：
 
-| 决策场景 | change_type | 流水记录内容 |
-| --- | --- | --- |
-| **新增**（首次进入 OneID 体系） | `bind` | `from_one_id = NULL`，`to_one_id = 新分配的 OneID`，`decision_type = create` |
-| **保持不变** | 不记录 | 归属未变化，不产生流水 |
+
+| 决策场景                  | change_type      | 流水记录内容                                                                        |
+| --------------------- | ---------------- | ----------------------------------------------------------------------------- |
+| **新增**（首次进入 OneID 体系） | `bind`           | `from_one_id = NULL`，`to_one_id = 新分配的 OneID`，`decision_type = create`        |
+| **保持不变**              | 不记录              | 归属未变化，不产生流水                                                                   |
 | **融合**（多个历史 OneID 合并） | `merge_retarget` | `from_one_id = 被合并的旧 OneID`，`to_one_id = 保留的目标 OneID`，`decision_type = merge` |
-| **分裂**（旧 OneID 拆分为多个） | `split_reassign` | `from_one_id = 被拆分的旧 OneID`，`to_one_id = 新的 OneID`，`decision_type = split` |
-| **人工干预 — 强制合并** | `reassign` | `from_one_id = 原 OneID`，`to_one_id = 目标 OneID`，`decision_type = intervention` |
-| **人工干预 — 强制拆分** | `reassign` | `from_one_id = 原 OneID`，`to_one_id = 新 OneID`，`decision_type = intervention` |
-| **人工干预 — ID 解绑** | `unbind` | `from_one_id = 原 OneID`，`to_one_id = NULL`，`decision_type = intervention` |
-| **回滚** | `rollback` | `from_one_id = 当前 OneID`，`to_one_id = 回滚目标 OneID`，`decision_type = rollback` |
+| **分裂**（旧 OneID 拆分为多个） | `split_reassign` | `from_one_id = 被拆分的旧 OneID`，`to_one_id = 新的 OneID`，`decision_type = split`    |
+| **人工干预 — 强制合并**       | `reassign`       | `from_one_id = 原 OneID`，`to_one_id = 目标 OneID`，`decision_type = intervention` |
+| **人工干预 — 强制拆分**       | `reassign`       | `from_one_id = 原 OneID`，`to_one_id = 新 OneID`，`decision_type = intervention`  |
+| **人工干预 — ID 解绑**      | `unbind`         | `from_one_id = 原 OneID`，`to_one_id = NULL`，`decision_type = intervention`     |
+| **回滚**                | `rollback`       | `from_one_id = 当前 OneID`，`to_one_id = 回滚目标 OneID`，`decision_type = rollback`  |
+
 
 **流水记录生成逻辑**：
 
@@ -831,9 +835,18 @@ val candidateOneIDs = components
 // 品牌层 → 集团层映射
 对于每个品牌层 OneID B：
   对于该品牌所属集团下的每个集团层 OneID G：
+    // 取两个 OneID 的 id_mappings 交集，仅基于 id_value 匹配（忽略 id_type）
+    // 例如 B 有 {phone:138xxxx, email:a@x.com}，G 有 {phone:138xxxx, device:d1}
+    // 则 shared_ids = {phone:138xxxx}，说明两者通过同一手机号关联到同一自然人
     计算 shared_ids = B.id_mappings ∩ G.id_mappings  (基于 id_value 匹配)
     如果 shared_ids 非空:
+      // 使用 Jaccard 相似度衡量映射可信度：交集大小 / 并集大小
+      // 值域 (0, 1]，值越大说明两个 OneID 共享的 ID 标识越多，映射越可靠
+      // 上例中 confidence = 1/3 ≈ 0.33
       confidence = |shared_ids| / |B.id_mappings ∪ G.id_mappings|
+      // 提取共享 ID 的类型列表（去重），用于下游分析映射质量
+      // 例如 shared_ids 包含 {phone:138xxxx, email:a@x.com}，则 shared_id_types = [phone, email]
+      // 高权重类型（如 phone）的出现会提升映射的可信度评估
       shared_id_types = shared_ids.map(id => id.id_type).distinct()
       写入 CrossLayerMapping(
         brand_one_id = B.one_id,
@@ -847,9 +860,15 @@ val candidateOneIDs = components
 // 品牌层 → 全局层映射
 对于每个品牌层 OneID B：
   对于每个全局层 OneID GL：
+    // 品牌层与全局层的 id_mappings 交集计算
+    // 全局层数据范围最大（包含所有集团），因此并集通常更大，confidence 值相对 brand_to_group 可能更低
+    // 这是预期行为：数据范围越广，单一品牌 OneID 与全局 OneID 的 Jaccard 相似度自然稀释
     计算 shared_ids = B.id_mappings ∩ GL.id_mappings
     如果 shared_ids 非空:
+      // Jaccard 相似度：交集 / 并集，衡量品牌 OneID 在全局范围内的身份重叠程度
       confidence = |shared_ids| / |B.id_mappings ∪ GL.id_mappings|
+      // 提取共享 ID 类型，用于判断跨层关联的强度
+      // 若 shared_id_types 包含 phone/email 等强标识，映射可信度更高
       shared_id_types = shared_ids.map(id => id.id_type).distinct()
       写入 CrossLayerMapping(
         brand_one_id = B.one_id,
@@ -863,9 +882,16 @@ val candidateOneIDs = components
 // 集团层 → 全局层映射
 对于每个集团层 OneID G：
   对于每个全局层 OneID GL：
+    // 集团层与全局层的 id_mappings 交集计算
+    // 集团层是中间层（包含多个品牌），全局层是最顶层（包含所有集团）
+    // 集团 OneID 通常比品牌 OneID 包含更多 id_mappings，因此与全局 OneID 的交集可能更大
     计算 shared_ids = G.id_mappings ∩ GL.id_mappings
     如果 shared_ids 非空:
+      // Jaccard 相似度：交集 / 并集
+      // 集团层与全局层的 confidence 通常高于品牌层与全局层，因为集团层数据范围更接近全局层
       confidence = |shared_ids| / |G.id_mappings ∪ GL.id_mappings|
+      // 提取共享 ID 类型，用于评估跨层映射的质量
+      // shared_id_types 的多样性和权重类型会影响下游合并决策的优先级
       shared_id_types = shared_ids.map(id => id.id_type).distinct()
       写入 CrossLayerMapping(
         group_one_id = G.one_id,
@@ -1694,7 +1720,7 @@ AuditLog {
 │     • 恢复 OneID 映射表            │
 │     • 恢复跨层映射表               │
 │     • 刷新 Redis / HBase 缓存     │
-│     • 触发下游数仓重算             │
+│                │
 │                                  │
 │  5. 记录审计日志                   │
 └──────────────────────────────────┘
@@ -1764,15 +1790,4 @@ BackfillTask {
 - 干预操作（合并/拆分）：可选触发回填，由操作人在提交时选择
 
 ---
-
-## 需求完成状态
-
-
-| 需求                                 | 状态    | 实现位置              |
-| ---------------------------------- | ----- | ----------------- |
-| 支持向下传递 OneID 关系，作为集团/品牌 OneID 合并依据 | ✅ 已完成 | 阶段 7：跨层映射表计算与向下传递 |
-| 支持干预 OneID 合并拆分                    | ✅ 已完成 | 人工干预 OneID 合并拆分机制 |
-| 原始业务 ID → OneID 权威映射表（对应 BigQuery 5.8） | ✅ 已完成 | 阶段 1.4 采集绑定关系 + 阶段 4.5 生成映射表 |
-| 原始业务 ID 归属变更流水表（对应 BigQuery 5.9） | ✅ 已完成 | 阶段 4.6 记录归属变更流水 |
-
 

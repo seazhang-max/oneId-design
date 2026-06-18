@@ -195,14 +195,14 @@ OPTIONS (
 
 ## 四、DWD 层 — OneID 图计算明细（oneid_dwd 数据集）
 
-### 4.1 dwd_oneid_graph_vertex_df（点表）
+### 4.1 dwd_oneid_graph_vertex_di（点表）
 
 清洗后的图计算点表，每个唯一的 ID 标识值作为一个顶点。
 
 > **说明**：该表是 Spark 图计算链路中的 DataFrame 中间结果，作为 GraphFrames/WCC 的输入使用，不作为下游业务查询或服务发布的直接消费表。
 
 ```sql
-CREATE OR REPLACE TABLE `oneid_dwd.dwd_oneid_graph_vertex_df`
+CREATE OR REPLACE TABLE `oneid_dwd.dwd_oneid_graph_vertex_di`
 (
   -- 基础标识
   vertex_id         STRING        NOT NULL,  -- 唯一标识 = id_type + ":" + id_value
@@ -252,14 +252,14 @@ OPTIONS (
 
 > **说明**：张三贡献了 6 个 vertex（phone、email、2 个 openid、unionid、device_id），李四贡献了 4 个 vertex。公共 cookie 被过滤，不生成 vertex。
 
-### 4.2 dwd_oneid_graph_edge_df（边表）
+### 4.2 dwd_oneid_graph_edge_di（边表）
 
 清洗后的图计算边表，同一用户在同一业务事件中共现的 ID 标识之间建立边。
 
 > **说明**：该表是 Spark 图计算链路中的 DataFrame 中间结果，作为 GraphFrames/WCC 的边输入使用，不作为下游业务查询或服务发布的直接消费表。
 
 ```sql
-CREATE OR REPLACE TABLE `oneid_dwd.dwd_oneid_graph_edge_df`
+CREATE OR REPLACE TABLE `oneid_dwd.dwd_oneid_graph_edge_di`
 (
   -- 边的两端
   src                 STRING        NOT NULL,  -- 源顶点 vertex_id
@@ -997,11 +997,13 @@ OPTIONS (
 
 **示例数据**：
 
-| change_id | change_type    | scope | scope_id | source_system | source_uid | original_id_type | original_id_value | from_one_id       | to_one_id         | decision_type | change_reason                                      | batch_id     | dt         |
-| --------- | -------------- | ----- | -------- | ------------- | ---------- | ---------------- | ----------------- | ----------------- | ----------------- | ------------- | -------------------------------------------------- | ------------ | ---------- |
-| CHG001    | bind           | brand | 1001     | btc_trade     | U001       | ecommerce_uid    | U001              | NULL              | BR:1001:000000100 | create        | 首次进入 OneID 体系，分配新 OneID                  | 202606170001 | 2026-06-17 |
-| CHG002    | merge_retarget | brand | 1001     | btc_trade     | U001       | ecommerce_uid    | U001              | BR:1001:000000100 | BR:1001:000000099 | merge         | WCC 连通分量命中多个历史 OneID，保留 000000099     | 202606180001 | 2026-06-18 |
-| CHG003    | split_reassign | brand | 1001     | btc_trade     | U001       | ecommerce_uid    | U001              | BR:1001:000000099 | BR:1001:000000121 | split         | 人工确认家庭共用账号，UID 从原 OneID 中剥离        | 202606190001 | 2026-06-19 |
+
+| change_id | change_type    | scope | scope_id | source_system | source_uid | original_id_type | original_id_value | from_one_id       | to_one_id         | decision_type | change_reason                     | batch_id     | dt         |
+| --------- | -------------- | ----- | -------- | ------------- | ---------- | ---------------- | ----------------- | ----------------- | ----------------- | ------------- | --------------------------------- | ------------ | ---------- |
+| CHG001    | bind           | brand | 1001     | btc_trade     | U001       | ecommerce_uid    | U001              | NULL              | BR:1001:000000100 | create        | 首次进入 OneID 体系，分配新 OneID           | 202606170001 | 2026-06-17 |
+| CHG002    | merge_retarget | brand | 1001     | btc_trade     | U001       | ecommerce_uid    | U001              | BR:1001:000000100 | BR:1001:000000099 | merge         | WCC 连通分量命中多个历史 OneID，保留 000000099 | 202606180001 | 2026-06-18 |
+| CHG003    | split_reassign | brand | 1001     | btc_trade     | U001       | ecommerce_uid    | U001              | BR:1001:000000099 | BR:1001:000000121 | split         | 人工确认家庭共用账号，UID 从原 OneID 中剥离       | 202606190001 | 2026-06-19 |
+
 
 **常用查询**：
 
@@ -1108,9 +1110,6 @@ OPTIONS (
 | dry_run_result     | {summary:{total_affected_one_ids:1, updated_one_ids:1, cross_layer_impact:true}, risk_assessment:{risk_level:"low", risk_factors:[{factor:"影响范围小", severity:"info"}]}} |
 
 
-
-
-
 ### 6.8 ads_oneid_gov_cross_layer_guidance_config_df（跨层合并指导配置表）
 
 控制品牌/集团层是否引用上层 OneID 结果作为合并指导，以及发生冲突时采用本层优先还是上层优先。
@@ -1162,7 +1161,6 @@ OPTIONS (
   description = 'ADS层：跨层合并指导配置表，按品牌/集团控制是否引用上层OneID指导本层合并'
 );
 ```
-
 
 ### 6.10 ads_oneid_gov_audit_log_di（审计日志表）
 
@@ -1247,8 +1245,6 @@ OPTIONS (
   description = 'ADS层：回滚操作表'
 );
 ```
-
-
 
 ---
 
@@ -1341,7 +1337,6 @@ OPTIONS (
 
 ---
 
-
 ## 九、OneData 建模要点
 
 ### 9.1 分层职责
@@ -1372,3 +1367,4 @@ ADS（应用数据）
 - ✅ 数据域标识：`user`（用户域）, `graph`（图计算域）, `identity`（身份域）
 - ✅ 增量标识：`_di`（日增量）, `_df`（日全量）
 - ✅ 表名格式：`{层级}_{业务域}_{数据域}_{表名}_{增量标识}`
+

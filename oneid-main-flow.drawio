@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <mxfile host="drawio" version="30.0.4">
   <diagram name="OneID 主流程" id="oneid-main-flow">
-    <mxGraphModel dx="0" dy="0" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="1400" math="0" shadow="0">
+    <mxGraphModel dx="0" dy="0" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="2000" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
 
-        <!-- Start -->
+        <!-- ==================== 开始 ==================== -->
         <mxCell id="2" value="开始" style="ellipse;whiteSpace=wrap;html=1;fillColor=#333333;strokeColor=#333333;fontColor=#FFFFFF;fontSize=12;fontStyle=1;" vertex="1" parent="1">
           <mxGeometry x="360" y="10" width="140" height="40" as="geometry" />
         </mxCell>
@@ -16,7 +16,7 @@
           <mxGeometry x="540" y="0" width="200" height="70" as="geometry" />
         </mxCell>
 
-        <!-- Stage 1: 数据采集与标准化清洗 -->
+        <!-- ==================== 阶段 1 ==================== -->
         <mxCell id="3" value="阶段 1：数据采集与标准化清洗" style="swimlane;startSize=28;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontStyle=1;rounded=1;arcSize=8;" vertex="1" parent="1">
           <mxGeometry x="30" y="80" width="800" height="80" as="geometry" />
         </mxCell>
@@ -38,7 +38,7 @@
           <mxGeometry x="280" y="180" width="300" height="28" as="geometry" />
         </mxCell>
 
-        <!-- Stage 2: 图数据加载与预处理 -->
+        <!-- ==================== 阶段 2 ==================== -->
         <mxCell id="9" value="阶段 2：图数据加载与预处理（GraphFrames）" style="swimlane;startSize=28;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontStyle=1;rounded=1;arcSize=8;" vertex="1" parent="1">
           <mxGeometry x="30" y="228" width="800" height="80" as="geometry" />
         </mxCell>
@@ -63,7 +63,7 @@
           <mxGeometry x="290" y="328" width="280" height="28" as="geometry" />
         </mxCell>
 
-        <!-- Stage 3: WCC 算法执行 -->
+        <!-- ==================== 阶段 3 ==================== -->
         <mxCell id="16" value="阶段 3：WCC 算法执行" style="swimlane;startSize=28;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;fontStyle=1;rounded=1;arcSize=8;" vertex="1" parent="1">
           <mxGeometry x="30" y="376" width="800" height="80" as="geometry" />
         </mxCell>
@@ -82,7 +82,7 @@
           <mxGeometry x="320" y="476" width="220" height="28" as="geometry" />
         </mxCell>
 
-        <!-- Stage 4: ID 映射决策与冲突消解 -->
+        <!-- ==================== 阶段 4 ==================== -->
         <mxCell id="21" value="阶段 4：ID 映射决策与冲突消解" style="swimlane;startSize=28;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;fontStyle=1;rounded=1;arcSize=8;" vertex="1" parent="1">
           <mxGeometry x="30" y="524" width="800" height="80" as="geometry" />
         </mxCell>
@@ -106,11 +106,11 @@
         </mxCell>
 
         <!-- Output 4 -->
-        <mxCell id="28" value="正式 OneID 映射表" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#BBBBBB;fontSize=11;fontStyle=2;arcSize=30;" vertex="1" parent="1">
-          <mxGeometry x="310" y="624" width="240" height="28" as="geometry" />
+        <mxCell id="28" value="正式 OneID 映射表 + 原始业务 ID 映射表 + 变更流水表" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#BBBBBB;fontSize=10;fontStyle=2;arcSize=30;" vertex="1" parent="1">
+          <mxGeometry x="230" y="624" width="400" height="28" as="geometry" />
         </mxCell>
 
-        <!-- Stage 5: 属性融合与画像沉淀 -->
+        <!-- ==================== 阶段 5 ==================== -->
         <mxCell id="29" value="阶段 5：属性融合与画像沉淀" style="swimlane;startSize=28;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;fontStyle=1;rounded=1;arcSize=8;" vertex="1" parent="1">
           <mxGeometry x="30" y="672" width="800" height="80" as="geometry" />
         </mxCell>
@@ -129,7 +129,7 @@
           <mxGeometry x="300" y="772" width="260" height="28" as="geometry" />
         </mxCell>
 
-        <!-- Stage 6: 跨层映射表计算与向下传递 -->
+        <!-- ==================== 阶段 6 ==================== -->
         <mxCell id="34" value="阶段 6：跨层映射表计算与向下传递" style="swimlane;startSize=28;whiteSpace=wrap;html=1;fillColor=#b2ebf2;strokeColor=#00838f;fontSize=12;fontStyle=1;rounded=1;arcSize=8;" vertex="1" parent="1">
           <mxGeometry x="30" y="820" width="800" height="80" as="geometry" />
         </mxCell>
@@ -151,7 +151,7 @@
           <mxGeometry x="300" y="920" width="260" height="28" as="geometry" />
         </mxCell>
 
-        <!-- Stage 7: 服务发布与缓存预热 -->
+        <!-- ==================== 阶段 7 ==================== -->
         <mxCell id="40" value="阶段 7：服务发布与缓存预热" style="swimlane;startSize=28;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;fontStyle=1;rounded=1;arcSize=8;" vertex="1" parent="1">
           <mxGeometry x="30" y="968" width="800" height="80" as="geometry" />
         </mxCell>
@@ -165,56 +165,269 @@
           <mxGeometry x="540" y="34" width="220" height="36" as="geometry" />
         </mxCell>
 
-        <!-- End -->
-        <mxCell id="44" value="在线服务就绪" style="ellipse;whiteSpace=wrap;html=1;fillColor=#333333;strokeColor=#333333;fontColor=#FFFFFF;fontSize=12;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="340" y="1078" width="180" height="40" as="geometry" />
+        <!-- Output 7 -->
+        <mxCell id="82" value="在线服务就绪" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#BBBBBB;fontSize=11;fontStyle=2;arcSize=30;" vertex="1" parent="1">
+          <mxGeometry x="310" y="1068" width="240" height="28" as="geometry" />
         </mxCell>
 
-        <!-- Main flow edges -->
+        <!-- ==================== 结束 ==================== -->
+        <mxCell id="44" value="完成" style="ellipse;whiteSpace=wrap;html=1;fillColor=#333333;strokeColor=#333333;fontColor=#FFFFFF;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="360" y="1116" width="140" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== 阶段 8：全量重算比对与纠错 ==================== -->
+        <mxCell id="100" value="阶段 8：全量重算比对与纠错（每周/每月定期触发）" style="swimlane;startSize=28;whiteSpace=wrap;html=1;fillColor=#e8eaf6;strokeColor=#3949ab;fontSize=11;fontStyle=1;rounded=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="30" y="1200" width="800" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="101" value="全量 WCC 重算" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3949ab;fontSize=10;arcSize=20;" vertex="1" parent="100">
+          <mxGeometry x="20" y="34" width="180" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="102" value="与增量结果比对" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3949ab;fontSize=10;arcSize=20;" vertex="1" parent="100">
+          <mxGeometry x="212" y="34" width="180" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="103" value="差异分类与告警" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3949ab;fontSize=10;arcSize=20;" vertex="1" parent="100">
+          <mxGeometry x="404" y="34" width="180" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="104" value="采用全量结果纠错" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3949ab;fontSize=10;arcSize=20;" vertex="1" parent="100">
+          <mxGeometry x="596" y="34" width="180" height="36" as="geometry" />
+        </mxCell>
+
+        <!-- Stage 8 output -->
+        <mxCell id="105" value="校验报告 + 纠错后的 OneID" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#BBBBBB;fontSize=10;fontStyle=2;arcSize=30;" vertex="1" parent="1">
+          <mxGeometry x="280" y="1300" width="300" height="26" as="geometry" />
+        </mxCell>
+
+        <!-- Stage 8 trigger note -->
+        <mxCell id="106" value="触发条件：&#xa;定期 / 阈值 / 手动 / 重大变更" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;size=12;fillColor=#E8EAF6;strokeColor=#3949ab;fontSize=9;align=left;spacingLeft=4;spacingTop=2;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="850" y="1200" width="170" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== 阶段 9：人工干预 ==================== -->
+        <mxCell id="110" value="阶段 9：人工干预 OneID 合并拆分（按需触发）" style="swimlane;startSize=28;whiteSpace=wrap;html=1;fillColor=#fce4ec;strokeColor=#c62828;fontSize=11;fontStyle=1;rounded=1;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="30" y="1360" width="800" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="111" value="审批工作流" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#c62828;fontSize=10;arcSize=20;" vertex="1" parent="110">
+          <mxGeometry x="20" y="34" width="120" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="112" value="Dry Run 模拟" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#c62828;fontSize=10;arcSize=20;" vertex="1" parent="110">
+          <mxGeometry x="150" y="34" width="120" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="113" value="OneID 映射&#xa;即时生效" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#c62828;fontSize=10;arcSize=20;" vertex="1" parent="110">
+          <mxGeometry x="280" y="34" width="120" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="114" value="干预规则同步&#xa;至 Spark" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#c62828;fontSize=10;arcSize=20;" vertex="1" parent="110">
+          <mxGeometry x="410" y="34" width="120" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="115" value="AI 属性&#xa;1h 内更新" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#c62828;fontSize=10;arcSize=20;" vertex="1" parent="110">
+          <mxGeometry x="540" y="34" width="120" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="116" value="审计与回滚" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#c62828;fontSize=10;arcSize=20;" vertex="1" parent="110">
+          <mxGeometry x="670" y="34" width="110" height="36" as="geometry" />
+        </mxCell>
+
+        <!-- Stage 9 output -->
+        <mxCell id="117" value="OneID 映射即时更新 + AI 属性 1h 内增量计算" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#BBBBBB;fontSize=10;fontStyle=2;arcSize=30;" vertex="1" parent="1">
+          <mxGeometry x="230" y="1460" width="400" height="26" as="geometry" />
+        </mxCell>
+
+        <!-- Stage 9 operation types note -->
+        <mxCell id="118" value="操作类型：&#xa;强制合并 / 强制拆分 / ID 解绑&#xa;边权重调整 / 边删除 / 边新增&#xa;冻结 / 解冻" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;size=12;fillColor=#FCE4EC;strokeColor=#C62828;fontSize=9;align=left;spacingLeft=4;spacingTop=2;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="850" y="1350" width="180" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== 实时链路侧面板 ==================== -->
+        <mxCell id="200" value="实时链路补充（Flink 秒级响应）" style="swimlane;startSize=26;whiteSpace=wrap;html=1;fillColor=#E0F7FA;strokeColor=#00838F;fontSize=11;fontStyle=1;rounded=1;arcSize=8;dashed=1;dashPattern=5 3;" vertex="1" parent="1">
+          <mxGeometry x="870" y="80" width="290" height="420" as="geometry" />
+        </mxCell>
+
+        <!-- Real-time step 1 -->
+        <mxCell id="201" value="用户事件&#xa;（注册/登录/浏览/下单）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E0F7FA;strokeColor=#00838F;fontSize=10;arcSize=20;fontStyle=1;" vertex="1" parent="200">
+          <mxGeometry x="40" y="34" width="210" height="40" as="geometry" />
+        </mxCell>
+        <!-- Real-time step 2 -->
+        <mxCell id="202" value="Flink 实时处理引擎&#xa;提取 ID 标识 → 查询 Redis" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#00838F;fontSize=10;arcSize=20;" vertex="1" parent="200">
+          <mxGeometry x="40" y="90" width="210" height="40" as="geometry" />
+        </mxCell>
+        <!-- Real-time decision -->
+        <mxCell id="203" value="匹配已有 OneID?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=10;" vertex="1" parent="200">
+          <mxGeometry x="60" y="146" width="170" height="60" as="geometry" />
+        </mxCell>
+        <!-- Real-time yes -->
+        <mxCell id="204" value="复用已有 OneID" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=10;arcSize=20;" vertex="1" parent="200">
+          <mxGeometry x="20" y="224" width="120" height="36" as="geometry" />
+        </mxCell>
+        <!-- Real-time no -->
+        <mxCell id="205" value="生成临时 OneID&#xa;TEMP:{uuid}" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#B85450;fontSize=10;arcSize=20;" vertex="1" parent="200">
+          <mxGeometry x="150" y="224" width="120" height="36" as="geometry" />
+        </mxCell>
+        <!-- Real-time write redis -->
+        <mxCell id="206" value="写入 Redis（TTL=24h）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#00838F;fontSize=10;arcSize=20;" vertex="1" parent="200">
+          <mxGeometry x="40" y="278" width="210" height="36" as="geometry" />
+        </mxCell>
+        <!-- Real-time offline merge -->
+        <mxCell id="207" value="次日离线 WCC 校准融合&#xa;临时 OneID → 正式 OneID" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#00838F;fontSize=10;arcSize=20;dashed=1;" vertex="1" parent="200">
+          <mxGeometry x="40" y="340" width="210" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- Real-time internal edges -->
+        <mxCell id="210" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#00838F;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="200" source="201" target="202">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="211" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#00838F;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="200" source="202" target="203">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="212" value="是" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#82B366;fontSize=9;fontColor=#82B366;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="200" source="203" target="204">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="213" value="否" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#B85450;fontSize=9;fontColor=#B85450;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="200" source="203" target="205">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="214" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#00838F;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="200" source="204" target="206">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="80" y="270" />
+              <mxPoint x="145" y="270" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="215" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#00838F;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="200" source="205" target="206">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="210" y="270" />
+              <mxPoint x="145" y="270" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="216" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#00838F;dashed=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="200" source="206" target="207">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Real-time label: 最终一致性 -->
+        <mxCell id="208" value="秒级可用 → 次日准确&#xa;最终一致性保证" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fillColor=none;strokeColor=none;fontSize=9;fontColor=#00838F;fontStyle=3;" vertex="1" parent="200">
+          <mxGeometry x="40" y="388" width="210" height="24" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== 三层并行说明 ==================== -->
+        <mxCell id="300" value="三层并行执行说明" style="swimlane;startSize=24;whiteSpace=wrap;html=1;fillColor=#F3E5F5;strokeColor=#7B1FA2;fontSize=11;fontStyle=1;rounded=1;arcSize=8;dashed=1;dashPattern=5 3;" vertex="1" parent="1">
+          <mxGeometry x="870" y="540" width="290" height="280" as="geometry" />
+        </mxCell>
+
+        <!-- Three layers -->
+        <mxCell id="301" value="品牌层 (Brand)&#xa;数据范围: 单品牌&#xa;阶段 1~5 独立执行" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=9;arcSize=15;align=center;" vertex="1" parent="300">
+          <mxGeometry x="15" y="32" width="260" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="302" value="集团层 (Group)&#xa;数据范围: 集团下全品牌&#xa;阶段 1~5 独立执行" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=9;arcSize=15;align=center;" vertex="1" parent="300">
+          <mxGeometry x="15" y="92" width="260" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="303" value="全局层 (Global)&#xa;数据范围: 全集团&#xa;阶段 1~5 独立执行" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=9;arcSize=15;align=center;" vertex="1" parent="300">
+          <mxGeometry x="15" y="152" width="260" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Converge label -->
+        <mxCell id="304" value="各层独立计算，互不依赖&#xa;阶段 6 跨层映射表汇聚" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fillColor=none;strokeColor=none;fontSize=9;fontColor=#7B1FA2;fontStyle=3;" vertex="1" parent="300">
+          <mxGeometry x="15" y="212" width="260" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- Parallel arrows -->
+        <mxCell id="305" value="并行" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#7B1FA2;dashed=1;fontSize=8;fontColor=#7B1FA2;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="300" source="301" target="304">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="306" value="并行" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#7B1FA2;dashed=1;fontSize=8;fontColor=#7B1FA2;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.3;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="300" source="302" target="304">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="307" value="并行" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#7B1FA2;dashed=1;fontSize=8;fontColor=#7B1FA2;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.7;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="300" source="303" target="304">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== 依赖关系注释 ==================== -->
+        <mxCell id="400" value="关键依赖：&#xa;阶段 1~5：三层并行，无依赖&#xa;阶段 6：依赖所有层的阶段 5 完成&#xa;阶段 7：依赖阶段 6 完成&#xa;阶段 8：定期触发，三层各自独立&#xa;阶段 9：随时按需触发" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;size=12;fillColor=#FFF9C4;strokeColor=#F9A825;fontSize=9;align=left;spacingLeft=5;spacingTop=5;" vertex="1" parent="1">
+          <mxGeometry x="870" y="850" width="220" height="110" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== 主流程连线 ==================== -->
+        <!-- Start -> Stage 1 -->
         <mxCell id="46" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;strokeColor=#555555;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="2" target="3">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
+        <!-- Stage 1 -> Output 1 -->
         <mxCell id="47" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;strokeColor=#555555;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="3" target="8">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
+        <!-- Output 1 -> Stage 2 -->
         <mxCell id="48" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;strokeColor=#555555;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="8" target="9">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
+        <!-- Stage 2 -> Output 2 -->
         <mxCell id="49" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;strokeColor=#555555;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="9" target="15">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
+        <!-- Output 2 -> Stage 3 -->
         <mxCell id="50" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;strokeColor=#555555;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="15" target="16">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
+        <!-- Stage 3 -> Output 3 -->
         <mxCell id="51" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;strokeColor=#555555;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="16" target="20">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
+        <!-- Output 3 -> Stage 4 -->
         <mxCell id="52" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;strokeColor=#555555;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="20" target="21">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
+        <!-- Stage 4 -> Output 4 -->
         <mxCell id="53" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;strokeColor=#555555;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="21" target="28">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
+        <!-- Output 4 -> Stage 5 -->
         <mxCell id="54" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;strokeColor=#555555;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="28" target="29">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
+        <!-- Stage 5 -> Output 5 -->
         <mxCell id="55" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;strokeColor=#555555;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="29" target="33">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
+        <!-- Output 5 -> Stage 6 -->
         <mxCell id="56" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;strokeColor=#555555;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="33" target="34">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
+        <!-- Stage 6 -> Output 6 -->
         <mxCell id="57" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;strokeColor=#555555;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="34" target="39">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
+        <!-- Output 6 -> Stage 7 -->
         <mxCell id="58" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;strokeColor=#555555;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="39" target="40">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="59" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;strokeColor=#555555;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="40" target="44">
+        <!-- Stage 7 -> Output 7 -->
+        <mxCell id="83" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;strokeColor=#555555;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="40" target="82">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <!-- Output 7 -> End -->
+        <mxCell id="84" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;strokeColor=#555555;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="82" target="44">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
 
-        <!-- Internal step edges: Stage 1 -->
+        <!-- End -> Stage 8 (dashed, periodic) -->
+        <mxCell id="120" value="定期触发" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;strokeColor=#3949AB;dashed=1;fontSize=9;fontColor=#3949AB;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="44" target="100">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Stage 8 -> Output 8 -->
+        <mxCell id="121" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;strokeColor=#3949AB;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="100" target="105">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Output 8 -> Stage 9 (dashed, on-demand) -->
+        <mxCell id="122" value="按需触发" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;strokeColor=#C62828;dashed=1;fontSize=9;fontColor=#C62828;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="105" target="110">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Stage 9 -> Output 9 -->
+        <mxCell id="123" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;strokeColor=#C62828;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="110" target="117">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== 阶段内连线 ==================== -->
+        <!-- Stage 1 internal -->
         <mxCell id="60" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#AAAAAA;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="3" source="4" target="5">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
@@ -225,7 +438,7 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
 
-        <!-- Internal step edges: Stage 2 -->
+        <!-- Stage 2 internal -->
         <mxCell id="63" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#AAAAAA;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="9" source="10" target="11">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
@@ -239,7 +452,7 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
 
-        <!-- Internal step edges: Stage 3 -->
+        <!-- Stage 3 internal -->
         <mxCell id="67" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#AAAAAA;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="16" source="17" target="18">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
@@ -247,7 +460,7 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
 
-        <!-- Internal step edges: Stage 4 -->
+        <!-- Stage 4 internal -->
         <mxCell id="69" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#AAAAAA;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="21" source="22" target="23">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
@@ -264,7 +477,7 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
 
-        <!-- Internal step edges: Stage 5 -->
+        <!-- Stage 5 internal -->
         <mxCell id="74" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#AAAAAA;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="29" source="30" target="31">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
@@ -272,7 +485,7 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
 
-        <!-- Internal step edges: Stage 6 -->
+        <!-- Stage 6 internal -->
         <mxCell id="76" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#AAAAAA;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="34" source="35" target="36">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
@@ -283,7 +496,7 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
 
-        <!-- Internal step edges: Stage 7 -->
+        <!-- Stage 7 internal -->
         <mxCell id="79" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#AAAAAA;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="40" source="41" target="42">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
@@ -291,8 +504,41 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
 
-        <!-- Note edge -->
+        <!-- Stage 8 internal -->
+        <mxCell id="130" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#AAAAAA;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="100" source="101" target="102">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="131" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#AAAAAA;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="100" source="102" target="103">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="132" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#AAAAAA;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="100" source="103" target="104">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Stage 9 internal -->
+        <mxCell id="140" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#AAAAAA;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="110" source="111" target="112">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="141" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#AAAAAA;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="110" source="112" target="113">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="142" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#AAAAAA;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="110" source="113" target="114">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="143" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#AAAAAA;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="110" source="114" target="115">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="144" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#AAAAAA;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="110" source="115" target="116">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Note edge: raw data -> start -->
         <mxCell id="81" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;strokeColor=#F9A825;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="45" target="2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Real-time link dashed connection to main flow -->
+        <mxCell id="220" value="实时补充" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;strokeColor=#00838F;fontSize=9;fontColor=#00838F;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="200" target="44">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
 

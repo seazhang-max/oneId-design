@@ -273,7 +273,10 @@ Vertex {
   source_system: String,   // 来源系统
   first_seen_at: Timestamp,
   last_seen_at: Timestamp,
-  observation_count: Long  // 观测次数（用于权重计算）
+  observation_count: Long, // 观测次数（用于权重计算）
+  status: Enum,            // "active" | "deleted"（软删除标记）
+  deleted_at: Timestamp?,  // 删除时间（删除时填写）
+  delete_reason: String?   // 删除原因（如 "user_cancelled"、"dirty_data"、"manual_intervention"）
 }
 ```
 
@@ -287,14 +290,16 @@ Edge {
   co_occurrence_count: Long, // 共现次数
   first_co_at: Timestamp,  // 首次共现时间
   last_co_at: Timestamp,   // 最近共现时间
-  source_system: String    // 共现来源系统
+  source_system: String,   // 共现来源系统
+  status: Enum,            // "active" | "deleted"（软删除标记）
+  deleted_at: Timestamp?,  // 删除时间
+  delete_reason: String?   // 删除原因
 }
 ```
 
 **边置信度计算规则**：
 
 置信度反映两个 ID 标识属于同一自然人的可信程度。置信度越高，WCC 连通时越倾向于合并。
-
 
 | 关联类型                  | 置信度  | 说明                   |
 | --------------------- | ---- | -------------------- |
@@ -305,42 +310,94 @@ Edge {
 | 设备 ID ↔ Cookie ID     | 0.6  | 中等关联：未登录态下的设备-浏览器关联  |
 | Cookie ID ↔ Cookie ID | 0.4  | 弱关联：同浏览器不同会话         |
 
+**增量计算逻辑**：
 
-**增量存储设计**：
+每日增量点表和边表来源于两类数据：**昨日有变化的用户信息**和**昨日发生的登录、注册、下单事件**。
 
-为支持增量更新和审计回溯，点表和边表采用**软删除 + 增量文件 + 全量快照**的存储策略：
+**第一步：从用户信息变更中计算增量点**
 
-- **软删除标记**：点表和边表均增加 `status` 字段（`"active"` | `"deleted"`），删除时标记为 `"deleted"` 而非物理删除，保留审计轨迹
-- **每日增量文件**：记录当日新增、删除、修改的点和边，文件名包含日期分区（如 `vertices/dt=2026-06-18/`）
-- **定期全量快照**：每周生成完整的点表和边表快照，作为增量合并的基线
+获取昨日有变化的用户信息（如手机号换绑、邮箱更新、账号注销等），与当前全量点表进行完整比对，产出三类增量：
+
+- **新增点**：用户信息中出现了当前点表中不存在的 ID 标识 → 生成新顶点，`status = "active"`
+- **修改点**：已有顶点的属性发生变化（如 `observation_count` 增加、`last_seen_at` 更新、`source_system` 扩展） → 更新对应字段
+- **删除点**：用户信息中某个 ID 标识被移除（如用户解绑手机号、账号注销） → 标记 `status = "deleted"`，填写 `deleted_at` 和 `delete_reason`
+
+**第二步：从业务事件中提取增量边**
+
+获取昨日发生的登录、注册、下单事件，从每个事件中提取该用户在同一上下文中共同出现的 ID 标识对，构建增量边：
+
+- **注册事件**：用户在某品牌注册时填写的手机号、邮箱等 ID 标识之间建立边（如 `phone ↔ email`）
+- **登录事件**：用户登录时携带的 ID 标识之间建立边（如 `phone ↔ 设备ID`、`phone ↔ OpenID`）
+- **下单事件**：用户下单时的登录态 ID 标识之间建立边（如 `phone ↔ CookieID`、`设备ID ↔ CookieID`）
+
+对增量边与当前全量边表进行比对：
+
+- **新增边**：边表中不存在的 ID 标识对 → 生成新边，`status = "active"`
+- **修改边**：已有边的共现信息更新（`co_occurrence_count` 增加、`last_co_at` 刷新、`weight` 重算） → 更新对应字段
+- **删除边**：当关联的顶点被删除时，其关联的边同步标记 `status = "deleted"`
+
+**增量存储策略**：
+
+为支持增量更新和审计回溯，采用**软删除 + 增量文件 + 全量快照**的存储策略：
+
+- **软删除标记**：点表和边表均通过 `status` 字段标记删除，而非物理删除，保留审计轨迹
+- **每日增量文件**：记录当日新增、修改、删除的点和边，文件名包含日期分区（如 `vertices/dt=2026-06-18/`）
+- **定期全量快照**：详见下方说明
+
+**全量快照机制**：
+
+全量快照是增量体系的基石——增量文件必须基于一个已知的全量基线进行合并，快照就是这个基线。
+
+**1. 快照生成时机与频率**
+
+- **生成频率**：每周日凌晨执行（选择业务低峰期）
+- **生成方式**：取上一个周六 23:59:59 的全量状态作为快照时间点，将最近一次快照 + 该周期内所有增量文件合并，产出新的全量快照
+- **保留策略**：保留最近 4 周快照，超期自动清理（可根据审计需求调整保留数量）
+
+**2. 快照合并过程**
 
 ```
-Vertex {
-  vertex_id: String,
-  id_type: Enum,
-  id_value: String,
-  source_system: String,
-  first_seen_at: Timestamp,
-  last_seen_at: Timestamp,
-  observation_count: Long,
-  status: Enum,              // "active" | "deleted"（软删除标记）
-  deleted_at: Timestamp?,    // 删除时间（删除时填写）
-  delete_reason: String?     // 删除原因（如 "user_cancelled"、"dirty_data"、"manual_intervention"）
-}
-
-Edge {
-  src: String,
-  dst: String,
-  weight: Float,
-  co_occurrence_count: Long,
-  first_co_at: Timestamp,
-  last_co_at: Timestamp,
-  source_system: String,
-  status: Enum,              // "active" | "deleted"（软删除标记）
-  deleted_at: Timestamp?,    // 删除时间
-  delete_reason: String?     // 删除原因
-}
+新快照 = 上周快照 ⊕ 本周所有增量文件（按日期顺序合并）
 ```
+
+合并规则：
+
+- **新增记录**：增量中 `status = "active"` 且快照中不存在的记录 → 写入快照
+- **修改记录**：增量中更新了已有记录的字段（如 `observation_count`、`last_seen_at`） → 用增量值覆盖快照中对应字段
+- **删除记录**：增量中标记 `status = "deleted"` 的记录 → 从快照中移除（快照只保留 active 状态的记录）
+- **冲突处理**：若同一记录在同一天内先被修改又被删除，以最终状态（deleted）为准
+
+**3. 快照存储路径**
+
+```
+gs://oneid-storage/{scope}/snapshots/
+  ├── vertices/
+  │   ├── dt=2026-06-22/       # 6月22日全量快照
+  │   ├── dt=2026-06-15/       # 6月15日全量快照
+  │   └── dt=2026-06-08/       # 6月8日全量快照
+  └── edges/
+      ├── dt=2026-06-22/
+      ├── dt=2026-06-15/
+      └── dt=2026-06-08/
+```
+
+**4. 快照的使用场景**
+
+| 场景 | 说明 |
+| --- | --- |
+| **每日增量合并** | 当日增量文件 + 最近一次快照 = 当前全量状态，供 WCC 图计算使用 |
+| **数据回滚** | 若增量计算出错，可回退到最近一次正确的快照，重跑增量 |
+| **数据校验** | 定期将快照与上游源数据进行抽样比对，验证增量合并的准确性 |
+| **审计追溯** | 通过对比不同时间点的快照，分析图数据的变化趋势（如节点增长速率、边密度变化） |
+
+**5. 快照质量保障**
+
+每次生成快照后执行以下校验，校验不通过则告警并阻断下游 WCC 计算：
+
+- **记录数一致性**：快照中的 active 记录数 = 上次快照 active 数 + 本周新增数 - 本周删除数
+- **无孤立边**：快照中每条边的 `src` 和 `dst` 必须能在点表中找到对应的 active 顶点
+- **vertex_id 唯一性**：快照中不存在重复的 `vertex_id`
+- **边去重**：快照中不存在相同的 `(src, dst)` 对
 
 #### 1.4 采集原始业务 ID 与标准化标识的绑定关系
 
